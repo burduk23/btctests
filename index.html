@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BTC Alarm - Управление</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background: var(--tg-theme-bg-color, #0f0f0f); color: var(--tg-theme-text-color, #fff); padding: 15px; margin: 0; }
+        h2 { color: var(--tg-theme-button-color, #0088cc); text-align: center; }
+        input, button { width: 100%; padding: 14px; margin: 10px 0; border-radius: 10px; border: none; font-size: 16px; box-sizing: border-box; }
+        input { background: var(--tg-theme-secondary-bg-color, #1f1f1f); color: var(--tg-theme-text-color, #fff); border: 1px solid var(--tg-theme-hint-color, #555); }
+        button { background: var(--tg-theme-button-color, #0088cc); color: var(--tg-theme-button-text-color, #fff); font-weight: bold; cursor: pointer; }
+        button.red { background: #cc3333; }
+        .status { padding: 12px; margin: 10px 0; border-radius: 8px; font-weight: bold; text-align: center; display: none; }
+        .success { background: #004d00; color: #fff; }
+        .error { background: #4d0000; color: #fff; }
+        .list { background: var(--tg-theme-secondary-bg-color, #1a1a1a); padding: 15px; border-radius: 10px; margin: 15px 0; line-height: 1.6; }
+        .group { border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 10px; }
+        .address { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 6px; margin: 5px 0; word-break: break-all; gap: 10px; }
+        .tabs { display: flex; justify-content: space-around; margin-bottom: 20px; }
+        .tab { padding: 10px; cursor: pointer; border-bottom: 2px solid transparent; color: var(--tg-theme-hint-color, #aaa); font-weight: bold; flex-grow: 1; text-align: center; }
+        .tab.active { border-bottom: 2px solid var(--tg-theme-button-color, #0088cc); color: var(--tg-theme-text-color, #fff); }
+        .hidden { display: none; }
+        .address-text { font-family: monospace; font-size: 13px; }
+    </style>
+</head>
+<body>
+    <div id="tabs-container" class="tabs hidden">
+        <div id="tab-user" class="tab active" onclick="switchTab('user')">Мои адреса</div>
+        <div id="tab-admin" class="tab" onclick="switchTab('admin')">Админ</div>
+    </div>
+
+    <div class="status" id="status"></div>
+
+    <div id="view-user">
+        <h3>➕ Добавить адрес</h3>
+        <input type="text" id="name" placeholder="Название группы (например: Мой кошелёк)">
+        <input type="text" id="address" placeholder="BTC адрес">
+        <button onclick="addAddress()">Добавить адрес</button>
+
+        <h3>📂 Ваши адреса</h3>
+        <div id="user-list" class="list">Загрузка...</div>
+    </div>
+
+    <div id="view-admin" class="hidden">
+        <h3>Управление пользователями</h3>
+        <div id="admin-list" class="list">Загрузка...</div>
+        
+        <h3>➕ Добавить адрес пользователю</h3>
+        <input type="text" id="admin-uid" placeholder="ID пользователя">
+        <input type="text" id="admin-name" placeholder="Название группы">
+        <input type="text" id="admin-address" placeholder="BTC адрес">
+        <button onclick="adminAddAddress()">Добавить пользователю</button>
+    </div>
+
+    <button onclick="Telegram.WebApp.close()" style="background:var(--tg-theme-hint-color, #555); margin-top: 20px;">Закрыть Mini App</button>
+
+    <script>
+        const webApp = window.Telegram.WebApp;
+        webApp.ready();
+        webApp.expand();
+
+        let stateData = null;
+
+        function showStatus(msg, isError = false) {
+            const status = document.getElementById('status');
+            status.textContent = msg;
+            status.className = 'status ' + (isError ? 'error' : 'success');
+            status.style.display = 'block';
+            setTimeout(() => { status.style.display = 'none'; }, 3000);
+        }
+
+        async function apiCall(action, payload = {}) {
+            try {
+                const res = await fetch('/api/action', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ initData: webApp.initData, action, payload })
+                });
+                const data = await res.json();
+                if (data.error) throw new Error(data.error);
+                await loadData();
+                return true;
+            } catch (e) {
+                showStatus(e.message, true);
+                return false;
+            }
+        }
+
+        async function loadData() {
+            try {
+                const res = await fetch('/api/get', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ initData: webApp.initData })
+                });
+                stateData = await res.json();
+                
+                if (stateData.is_admin) {
+                    document.getElementById('tabs-container').classList.remove('hidden');
+                }
+                
+                renderUserView();
+                if (stateData.is_admin) renderAdminView();
+            } catch (e) {
+                showStatus('Ошибка загрузки данных', true);
+                document.getElementById('user-list').innerHTML = 'Ошибка соединения с ботом.';
+            }
+        }
+
+        function renderUserView() {
+            const list = document.getElementById('user-list');
+            list.innerHTML = '';
+            const groups = stateData.user_data.groups || [];
+            
+            if (groups.length === 0) {
+                list.innerHTML = 'Список пуст.';
+                return;
+            }
+
+            groups.forEach(g => {
+                const gDiv = document.createElement('div');
+                gDiv.className = 'group';
+                gDiv.innerHTML = `<strong>${g.name}</strong> <button onclick="apiCall('delete_group', {gid: '${g.id}'})" class="red" style="padding:4px; font-size:12px; width:auto;">Удалить группу</button>`;
+                
+                (g.addresses || []).forEach(a => {
+                    const aDiv = document.createElement('div');
+                    aDiv.className = 'address';
+                    aDiv.innerHTML = `
+                        <span class="address-text">${a.addr}</span>
+                        <button onclick="apiCall('delete_address', {gid: '${g.id}', aid: '${a.id}'})" class="red" style="padding:4px; font-size:12px; width:auto; margin:0;">🗑</button>
+                    `;
+                    gDiv.appendChild(aDiv);
+                });
+                list.appendChild(gDiv);
+            });
+        }
+
+        function renderAdminView() {
+            const list = document.getElementById('admin-list');
+            list.innerHTML = '';
+            const users = stateData.all_users || {};
+            
+            for (const [uid, udata] of Object.entries(users)) {
+                const uDiv = document.createElement('div');
+                uDiv.className = 'group';
+                const name = udata.first_name || udata.username || uid;
+                uDiv.innerHTML = `<strong>👤 ${name} (ID: ${uid})</strong>`;
+                
+                (udata.groups || []).forEach(g => {
+                    (g.addresses || []).forEach(a => {
+                        const aDiv = document.createElement('div');
+                        aDiv.className = 'address';
+                        const status = a.notify_disabled ? '❌ Выкл' : '✅ Вкл';
+                        aDiv.innerHTML = `
+                            <div style="display:flex; flex-direction:column; gap:4px;">
+                                <small>${g.name}</small>
+                                <span class="address-text">${a.addr}</span>
+                            </div>
+                            <div style="display:flex; flex-direction:column; gap:4px;">
+                                <button onclick="apiCall('admin_toggle_notify', {uid: '${uid}', gid: '${g.id}', aid: '${a.id}'})" style="padding:4px; font-size:12px; width:auto; margin:0; background:#555;">${status}</button>
+                                <button onclick="apiCall('admin_delete_address', {uid: '${uid}', gid: '${g.id}', aid: '${a.id}'})" class="red" style="padding:4px; font-size:12px; width:auto; margin:0;">🗑</button>
+                            </div>
+                        `;
+                        uDiv.appendChild(aDiv);
+                    });
+                });
+                list.appendChild(uDiv);
+            }
+        }
+
+        async function addAddress() {
+            const name = document.getElementById('name').value;
+            const address = document.getElementById('address').value;
+            if (await apiCall('add_address', { group_name: name, address })) {
+                showStatus('✅ Адрес добавлен');
+                document.getElementById('address').value = '';
+            }
+        }
+
+        async function adminAddAddress() {
+            const uid = document.getElementById('admin-uid').value;
+            const name = document.getElementById('admin-name').value;
+            const address = document.getElementById('admin-address').value;
+            if (await apiCall('admin_add_address', { uid, group_name: name, address })) {
+                showStatus('✅ Адрес добавлен пользователю');
+                document.getElementById('admin-address').value = '';
+            }
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('tab-' + tab).classList.add('active');
+            
+            document.getElementById('view-user').classList.add('hidden');
+            document.getElementById('view-admin').classList.add('hidden');
+            document.getElementById('view-' + tab).classList.remove('hidden');
+        }
+
+        loadData();
+    </script>
+</body>
+</html>
