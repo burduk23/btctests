@@ -9,6 +9,8 @@ import time
 import secrets
 import hmac
 import hashlib
+import random
+from playwright.async_api import async_playwright
 from urllib.parse import parse_qsl
 from pathlib import Path
 from typing import Optional
@@ -651,6 +653,31 @@ async def text_router(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     cfg = load_config()
     admin_id_cfg = str(cfg.get("ADMIN_CHAT_ID", ADMIN_ID))
 
+    if flow.get("action") == "exchange_wait_amount":
+        text_val = text.replace(',', '.')
+        try:
+            btc_amount = float(text_val)
+            if btc_amount <= 0:
+                raise ValueError()
+        except ValueError:
+            await ctx.bot.send_message(chat_id=chat_id, text="Пожалуйста, отправьте корректное число (например, 0.0045).", reply_markup=cancel_markup("menu_main"))
+            return
+
+        await remove_prompt(ctx, chat_id)
+        wait_msg = await ctx.bot.send_message(chat_id=chat_id, text="Проверяю курс... ⏳")
+        ctx.chat_data.pop("flow", None)
+        
+        result = await get_exchange_rate(btc_amount)
+        
+        try:
+            await ctx.bot.delete_message(chat_id=chat_id, message_id=wait_msg.message_id)
+        except Exception:
+            pass
+
+        kb = [[InlineKeyboardButton("🔙 Назад", callback_data="menu_main")]]
+        await ctx.bot.send_message(chat_id=chat_id, text=f"За {btc_amount} BTC вы отдадите:\n**{result}**", parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(kb))
+        return
+
     if flow.get("action") == "add_address_name":
         name = text
         await remove_prompt(ctx, chat_id)
@@ -929,6 +956,77 @@ async def monitor_loop(app):
                             status = status_r.json()
                             if status.get("confirmations", 0) > 0 and txid not in state.get("notified_confirmed", {}):
                                 addr = info["addr"]
+                                amount_btc = info.get("amount_btc", 0)
+                                amount_usd = info.get("amount_usd", 0)
+
+                                subs = addr_to_subs.get(addr, [])
+                                for sub in subs:
+                                    if sub.get("disabled"):
+                                        continue
+                                    uid = sub["uid"]
+                                    group_name = sub["group_name"]
+                                    try:
+                                        await app.bot.send_message(
+                                            chat_id=int(uid),
+                                            text=f"✅ Транзакция получила 1+ подтверждение\n"
+                                                 f"————————————\n"
+                                                 f"**{group_name}**\n"
+                                                 f"`{addr}`\n"
+                                                 f"————————————\n"
+                                                 f"💰 Сумма: `{amount_btc:.8f}` BTC | `${amount_usd}`\n"
+                                                 f"————————————\n"
+                                                 f"📍 https://blockchair.com/bitcoin/transaction/{txid}",
+                                            parse_mode="Markdown"
+                                        )
+                                    except Exception as e:
+                                        logger.debug(f"Не удалось отправить уведомление {uid}: {e}")
+
+                                state.setdefault("notified_confirmed", {})[txid] = True
+                                state["unconfirmed"].pop(txid, None)
+                    except Exception as e:
+                        logger.debug(f"Ошибка статуса tx {txid}: {e}")
+
+                save_state(state)
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                logger.exception("Ошибка в monitor_loop: %s", e)
+            await asyncio.sleep(poll_interval)
+    finally:
+        try:
+            await client.aclose()
+        except Exception:
+            pass
+
+# ---------------- main ----------------
+def main():
+    cfg = load_config()
+    bot_token = cfg["BOT_TOKEN"]
+    logger.info("Инициализация бота...")
+    app = ApplicationBuilder().token(bot_token).build()
+
+    # Регистрация обработчиков
+    app.add_handler(CommandHandler("start", cmd_start))
+    app.add_handler(CommandHandler("help", cmd_start))
+    app.add_handler(CallbackQueryHandler(callback_router))
+    app.add_handler(MessageHandler(filters.ALL & (~filters.COMMAND), text_router))
+    
+    # Обработка ошибок
+    app.add_error_handler(error_handler)
+
+    async def _post_init(application):
+        logger.info("Запуск фонового мониторинга транзакций...")
+        application.create_task(monitor_loop(application))
+        logger.info("Запуск веб-сервера для Mini App...")
+        application.create_task(start_web_server(application))
+
+    app.post_init = _post_init
+
+    logger.info("Бот запущен и ожидает сообщений...")
+    app.run_polling()
+
+if __name__ == "__main__":
+    main()dr"]
                                 amount_btc = info.get("amount_btc", 0)
                                 amount_usd = info.get("amount_usd", 0)
 

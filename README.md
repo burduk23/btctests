@@ -17,12 +17,18 @@ Telegram-бот для мониторинга входящих транзакц�
 Бот и встроенное Mini App можно развернуть на сервере Ubuntu.
 
 1. Клонируйте репозиторий.
-2. Установите зависимости:
+2. Создайте виртуальное окружение и активируйте его (рекомендуется):
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate  # Для Windows: venv\Scripts\activate
+   ```
+3. Установите зависимости:
    ```bash
    pip install -r requirements.txt
+   playwright install chromium
    ```
-   *Основные библиотеки: `python-telegram-bot`, `httpx`, `aiohttp`.*
-3. Создайте файл `config.json` в корневой директории бота:
+   *Основные библиотеки: `python-telegram-bot`, `httpx`, `aiohttp`, `playwright`.*
+4. Создайте файл `config.json` в корневой директории бота:
    ```json
    {
      "BOT_TOKEN": "ВАШ_ТЕЛЕГРАМ_ТОКЕН",
