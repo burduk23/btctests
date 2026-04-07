@@ -97,6 +97,79 @@ def find_address(group: dict, aid: str) -> Optional[dict]:
             return a
     return None
 
+# ---------------- exchange scraping ----------------
+async def get_exchange_rate(btc_amount: float) -> str:
+    """
+    Navigates to onemoment.cc, inputs the BTC amount, and returns the resulting RUB amount.
+    """
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(headless=True)
+        context = await browser.new_context()
+        page = await context.new_page()
+
+        try:
+            await page.goto('https://onemoment.cc/')
+            await page.wait_for_timeout(3000)
+
+            # 1. Отдаете -> СБП
+            try:
+                give_label = page.get_by_text('Отдаете', exact=True).first
+                await give_label.evaluate('el => el.parentElement.parentElement.querySelector("button").click()')
+                await page.wait_for_timeout(1000)
+                await page.get_by_text('СБП', exact=True).nth(0).click()
+                await page.wait_for_timeout(1000)
+            except Exception as e:
+                logger.warning(f"Failed to select СБП: {e}")
+
+            # 2. Получаете -> Bitcoin
+            try:
+                get_label = page.get_by_text('Получаете', exact=True).first
+                await get_label.evaluate('el => el.parentElement.parentElement.querySelector("button").click()')
+                await page.wait_for_timeout(1000)
+                await page.get_by_text('Bitcoin', exact=True).nth(0).click()
+                await page.wait_for_timeout(1000)
+            except Exception as e:
+                logger.warning(f"Failed to select Bitcoin: {e}")
+
+            # 3. Сначала выбираем "С верификацией", чтобы избежать сброса введенной суммы
+            try:
+                await page.evaluate('''() => {
+                    const buttons = Array.from(document.querySelectorAll('button'));
+                    const target = buttons.find(b => b.textContent.includes('С верификацией'));
+                    if (target) target.click();
+                }''')
+                await page.wait_for_timeout(2000)
+            except Exception as e:
+                logger.warning(f"Failed to click 'С верификацией': {e}")
+
+            # 4. Ввод суммы BTC
+            inputs = page.locator('input[type="text"]')
+            await inputs.nth(1).focus()
+            await inputs.nth(1).click(click_count=3)
+            await page.keyboard.press('Backspace')
+            await page.wait_for_timeout(500)
+            
+            await inputs.nth(1).press_sequentially(str(btc_amount), delay=100)
+            await page.wait_for_timeout(5000)
+
+            # 5. Получение итоговой суммы в RUB
+            give_val_str = await inputs.nth(0).input_value()
+            
+            try:
+                clean_val = give_val_str.replace('\\xa0', '').replace(' ', '').replace(',', '.')
+                parsed_rub = float(clean_val)
+                final_rub = parsed_rub + random.randint(300, 310)
+                return f"{final_rub:,.2f}".replace(',', ' ') + " RUB"
+            except Exception as e:
+                logger.warning(f"Ошибка при парсинге суммы '{give_val_str}': {e}")
+                return f"{give_val_str} RUB"
+
+        except Exception as e:
+            logger.error(f"Playwright error: {e}")
+            return "Ошибка при получении курса. Пожалуйста, попробуйте позже."
+        finally:
+            await browser.close()
+
 # ---------------- web app ----------------
 def verify_webapp_data(init_data: str, bot_token: str):
     if not init_data: return None
@@ -302,6 +375,7 @@ def main_menu_markup(user_id: str = None):
     kb = []
 
     kb.extend([
+        [InlineKeyboardButton("💱 Обмен", callback_data="exchange")],
         [InlineKeyboardButton("📂 Список адресов", callback_data="menu_groups")],
         [InlineKeyboardButton("➕ Добавить адрес", callback_data="menu_add_address")],
         [InlineKeyboardButton("🗑 Удалить название", callback_data="menu_remove_group")]
@@ -433,6 +507,12 @@ async def callback_router(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     if data == "menu_main":
         ctx.chat_data.pop("flow", None)
         await update_menu(ctx, chat_id, "Главное меню:", main_menu_markup(user_id))
+        return
+
+    if data == "exchange":
+        await remove_menu_only(ctx, chat_id)
+        prompt = await ctx.bot.send_message(chat_id=chat_id, text="Введите сумму в Bitcoin (например 0.0045).", reply_markup=cancel_markup("menu_main"))
+        ctx.chat_data["flow"] = {"action": "exchange_wait_amount", "prompt_id": prompt.message_id}
         return
 
     if data == "menu_groups":
