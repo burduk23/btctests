@@ -43,7 +43,7 @@
 
         h2 { text-align: center; }
 
-        input, button {
+        input, button, textarea {
             width: 100%;
             padding: 14px 16px;
             margin: 8px 0;
@@ -53,15 +53,20 @@
             box-sizing: border-box;
             transition: all 0.2s ease;
         }
+        
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
 
-        input {
+        input, textarea {
             background: var(--card-bg-color);
             color: var(--text-color);
             border: 1px solid var(--border-color);
             box-shadow: 0 2px 4px var(--shadow-color);
         }
 
-        input:focus {
+        input:focus, textarea:focus {
             outline: none;
             border-color: var(--button-color);
             box-shadow: 0 0 0 2px rgba(36, 129, 204, 0.2);
@@ -80,17 +85,16 @@
             opacity: 0.9;
         }
 
-        button.red {
-            background: #e53935;
-            color: white;
+        button.red { background: #e53935; color: white; }
+        button.green { background: #4caf50; color: white; }
+        button.outline { 
+            background: transparent; 
+            color: var(--button-color); 
+            border: 1px solid var(--button-color);
+            box-shadow: none;
         }
 
-        .list {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            margin: 16px 0;
-        }
+        .list { display: flex; flex-direction: column; gap: 16px; margin: 16px 0; }
 
         .group {
             background: var(--card-bg-color);
@@ -101,136 +105,101 @@
         }
 
         .group-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 12px;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;
         }
 
-        .group-header strong {
-            font-size: 18px;
-        }
+        .group-header strong { font-size: 18px; }
 
         .address {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: var(--secondary-bg-color);
-            padding: 12px;
-            border-radius: 10px;
-            margin: 8px 0;
-            gap: 12px;
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--secondary-bg-color); padding: 12px; border-radius: 10px; margin: 8px 0; gap: 12px;
         }
 
-        .address-info {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            overflow: hidden;
-        }
+        .address-info { display: flex; flex-direction: column; gap: 4px; overflow: hidden; }
 
-        .address-text {
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 13px;
-            color: var(--text-color);
-            word-break: break-all;
-        }
+        .address-text { font-family: 'Courier New', Courier, monospace; font-size: 13px; color: var(--text-color); word-break: break-all; }
 
         .tabs {
-            display: flex;
-            background: var(--card-bg-color);
-            border-radius: 12px;
-            padding: 4px;
-            margin-bottom: 24px;
-            box-shadow: 0 2px 8px var(--shadow-color);
+            display: flex; background: var(--card-bg-color); border-radius: 12px;
+            padding: 4px; margin-bottom: 24px; box-shadow: 0 2px 8px var(--shadow-color);
         }
 
         .tab {
-            padding: 12px;
-            cursor: pointer;
-            color: var(--hint-color);
-            font-weight: 600;
-            flex: 1;
-            text-align: center;
-            border-radius: 8px;
-            transition: all 0.2s;
+            padding: 12px; cursor: pointer; color: var(--hint-color); font-weight: 600;
+            flex: 1; text-align: center; border-radius: 8px; transition: all 0.2s;
         }
 
-        .tab.active {
-            background: var(--button-color);
-            color: var(--button-text-color);
-        }
+        .tab.active { background: var(--button-color); color: var(--button-text-color); }
 
-        .hidden { display: none; }
+        .hidden { display: none !important; }
 
         /* Toast notification */
-        #toast-container {
-            position: fixed;
-            top: 16px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1000;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            pointer-events: none;
-            width: 90%;
-            max-width: 400px;
-        }
-
-        .toast {
-            padding: 14px 20px;
-            border-radius: 12px;
-            color: #fff;
-            font-weight: 500;
-            font-size: 15px;
-            text-align: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            animation: slideDown 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, fadeOut 0.3s ease 2.7s forwards;
-        }
-
+        #toast-container { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column; gap: 8px; pointer-events: none; width: 90%; max-width: 400px; }
+        .toast { padding: 14px 20px; border-radius: 12px; color: #fff; font-weight: 500; font-size: 15px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); animation: slideDown 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, fadeOut 0.3s ease 2.7s forwards; }
         .toast.success { background: #4caf50; }
         .toast.error { background: #f44336; }
 
-        @keyframes slideDown {
-            from { transform: translateY(-100%); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
+        @keyframes slideDown { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
 
-        @keyframes fadeOut {
-            from { opacity: 1; }
-            to { opacity: 0; }
-        }
-
-        .btn-small {
-            padding: 8px 12px;
-            font-size: 13px;
-            width: auto;
-            margin: 0;
-            border-radius: 8px;
-        }
+        .btn-small { padding: 8px 12px; font-size: 13px; width: auto; margin: 0; border-radius: 8px; }
         
-        .empty-state {
-            text-align: center;
-            padding: 32px 16px;
-            color: var(--hint-color);
-            background: var(--card-bg-color);
-            border-radius: 16px;
-            border: 1px dashed var(--border-color);
+        .empty-state { text-align: center; padding: 32px 16px; color: var(--hint-color); background: var(--card-bg-color); border-radius: 16px; border: 1px dashed var(--border-color); }
+        
+        /* Chat UI */
+        .chat-container {
+            display: flex; flex-direction: column; height: 60vh;
+            background: var(--card-bg-color); border-radius: 16px; overflow: hidden;
+            border: 1px solid var(--border-color); box-shadow: 0 4px 12px var(--shadow-color);
         }
+        .chat-messages {
+            flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px;
+            background: var(--secondary-bg-color);
+        }
+        .msg-bubble {
+            max-width: 80%; padding: 10px 14px; border-radius: 16px; font-size: 15px; word-break: break-word;
+        }
+        .msg-bubble.me {
+            align-self: flex-end; background: var(--button-color); color: var(--button-text-color);
+            border-bottom-right-radius: 4px;
+        }
+        .msg-bubble.them {
+            align-self: flex-start; background: var(--card-bg-color); color: var(--text-color);
+            border: 1px solid var(--border-color); border-bottom-left-radius: 4px;
+        }
+        .msg-time { font-size: 11px; opacity: 0.7; margin-top: 4px; text-align: right; }
+        
+        .chat-input-area {
+            padding: 12px; background: var(--card-bg-color); border-top: 1px solid var(--border-color);
+            display: flex; gap: 8px; align-items: center;
+        }
+        .chat-input-area input { margin: 0; flex: 1; }
+        .chat-input-area button { margin: 0; width: auto; padding: 12px 20px; }
+        
+        .broadcast-users {
+            max-height: 200px; overflow-y: auto; background: var(--secondary-bg-color);
+            border-radius: 12px; padding: 12px; margin-bottom: 12px;
+        }
+        .user-checkbox {
+            display: flex; align-items: center; gap: 12px; padding: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .user-checkbox:last-child { border-bottom: none; }
+        .user-checkbox input { width: 20px; height: 20px; margin: 0; }
     </style>
 </head>
 <body>
     <div id="toast-container"></div>
 
-    <div id="tabs-container" class="tabs hidden">
+    <div id="tabs-container" class="tabs">
         <div id="tab-user" class="tab active" onclick="switchTab('user')">Мои адреса</div>
-        <div id="tab-admin" class="tab" onclick="switchTab('admin')">Админ</div>
+        <div id="tab-chat" class="tab" onclick="switchTab('chat')">Связь</div>
+        <div id="tab-admin" class="tab hidden" onclick="switchTab('admin')">Админ</div>
     </div>
 
-    <div id="view-user">
+    <!-- USER ADDRESSES -->
+    <div id="view-user" class="view-section">
         <h3>📂 Ваши адреса</h3>
         <div id="user-list" class="list">
             <div class="empty-state">Загрузка...</div>
@@ -244,18 +213,61 @@
         </div>
     </div>
 
-    <div id="view-admin" class="hidden">
-        <h3>Управление пользователями</h3>
-        <div id="admin-list" class="list">
-            <div class="empty-state">Загрузка...</div>
+    <!-- USER CHAT -->
+    <div id="view-chat" class="view-section hidden">
+        <h3>Чат с администратором</h3>
+        <div class="chat-container">
+            <div id="user-chat-messages" class="chat-messages">
+                <!-- Messages will load here -->
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="user-chat-input" placeholder="Введите сообщение...">
+                <button onclick="sendChatMessage(null)">Отправить</button>
+            </div>
         </div>
-        
-        <h3>➕ Добавить адрес пользователю</h3>
-        <div class="group" style="margin-top:0;">
-            <input type="text" id="admin-uid" placeholder="ID пользователя">
-            <input type="text" id="admin-name" placeholder="Название группы">
-            <input type="text" id="admin-address" placeholder="BTC адрес">
-            <button onclick="adminAddAddress()">Добавить пользователю</button>
+    </div>
+
+    <!-- ADMIN PANEL -->
+    <div id="view-admin" class="view-section hidden">
+        <!-- Main Admin List -->
+        <div id="admin-main">
+            <h3>Рассылка сообщений</h3>
+            <div class="group" style="margin-top:0;">
+                <div class="broadcast-users" id="broadcast-users-list">
+                    <!-- Checkboxes will appear here -->
+                </div>
+                <button class="outline btn-small" onclick="selectAllUsers()" style="margin-bottom:8px;">Выбрать всех</button>
+                <textarea id="broadcast-text" placeholder="Текст рассылки..."></textarea>
+                <button class="green" onclick="sendBroadcast()">Отправить рассылку</button>
+            </div>
+
+            <h3>Управление пользователями</h3>
+            <div id="admin-list" class="list">
+                <div class="empty-state">Загрузка...</div>
+            </div>
+            
+            <h3>➕ Добавить адрес пользователю</h3>
+            <div class="group" style="margin-top:0;">
+                <input type="text" id="admin-uid" placeholder="ID пользователя">
+                <input type="text" id="admin-name" placeholder="Название группы">
+                <input type="text" id="admin-address" placeholder="BTC адрес">
+                <button onclick="adminAddAddress()">Добавить пользователю</button>
+            </div>
+        </div>
+
+        <!-- Admin Chat View (Hidden by default) -->
+        <div id="admin-chat-view" class="hidden">
+            <button class="outline" onclick="closeAdminChat()" style="margin-bottom:16px;">⬅ Назад к списку</button>
+            <h3 id="admin-chat-title">Чат с пользователем</h3>
+            <div class="chat-container">
+                <div id="admin-chat-messages" class="chat-messages">
+                    <!-- Messages will load here -->
+                </div>
+                <div class="chat-input-area">
+                    <input type="text" id="admin-chat-input" placeholder="Введите сообщение...">
+                    <button onclick="sendChatMessageAdmin()">Отправить</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -265,6 +277,7 @@
         webApp.expand();
 
         let stateData = null;
+        let currentAdminChatUid = null;
 
         function showToast(msg, isError = false) {
             const container = document.getElementById('toast-container');
@@ -272,9 +285,7 @@
             toast.className = 'toast ' + (isError ? 'error' : 'success');
             toast.textContent = msg;
             container.appendChild(toast);
-            setTimeout(() => {
-                if(container.contains(toast)) container.removeChild(toast);
-            }, 3000);
+            setTimeout(() => { if(container.contains(toast)) container.removeChild(toast); }, 3000);
         }
 
         async function apiCall(action, payload = {}) {
@@ -304,14 +315,19 @@
                 stateData = await res.json();
                 
                 if (stateData.is_admin) {
-                    document.getElementById('tabs-container').classList.remove('hidden');
+                    document.getElementById('tab-admin').classList.remove('hidden');
                 }
                 
                 renderUserView();
-                if (stateData.is_admin) renderAdminView();
+                renderUserChat();
+                if (stateData.is_admin) {
+                    renderAdminView();
+                    if(currentAdminChatUid) {
+                        renderAdminChat(currentAdminChatUid); // Refresh open chat
+                    }
+                }
             } catch (e) {
                 showToast('Ошибка загрузки данных', true);
-                document.getElementById('user-list').innerHTML = '<div class="empty-state">Ошибка соединения с ботом.</div>';
             }
         }
 
@@ -328,31 +344,67 @@
             groups.forEach(g => {
                 const gDiv = document.createElement('div');
                 gDiv.className = 'group';
-                gDiv.innerHTML = `
-                    <div class="group-header">
-                        <strong>${g.name}</strong> 
-                        <button onclick="apiCall('delete_group', {gid: '${g.id}'})" class="red btn-small">Удалить</button>
-                    </div>
-                `;
-                
+                gDiv.innerHTML = `<div class="group-header"><strong>${g.name}</strong> <button onclick="apiCall('delete_group', {gid: '${g.id}'})" class="red btn-small">Удалить</button></div>`;
                 (g.addresses || []).forEach(a => {
                     const aDiv = document.createElement('div');
                     aDiv.className = 'address';
-                    aDiv.innerHTML = `
-                        <div class="address-info">
-                            <span class="address-text">${a.addr}</span>
-                        </div>
-                        <button onclick="apiCall('delete_address', {gid: '${g.id}', aid: '${a.id}'})" class="red btn-small" style="font-size:16px; padding:6px 10px;">🗑</button>
-                    `;
+                    aDiv.innerHTML = `<div class="address-info"><span class="address-text">${a.addr}</span></div><button onclick="apiCall('delete_address', {gid: '${g.id}', aid: '${a.id}'})" class="red btn-small" style="font-size:16px; padding:6px 10px;">🗑</button>`;
                     gDiv.appendChild(aDiv);
                 });
                 list.appendChild(gDiv);
             });
         }
 
+        function formatTime(ts) {
+            const d = new Date(ts * 1000);
+            return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+        }
+
+        function renderChatMessages(containerId, messages, myRole) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            if(!messages || messages.length === 0) {
+                container.innerHTML = '<div class="empty-state">Нет сообщений.</div>';
+                return;
+            }
+            messages.forEach(m => {
+                const isMe = m.from === myRole;
+                const b = document.createElement('div');
+                b.className = `msg-bubble ${isMe ? 'me' : 'them'}`;
+                b.innerHTML = `<div>${m.text}</div><div class="msg-time">${formatTime(m.ts)}</div>`;
+                container.appendChild(b);
+            });
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function renderUserChat() {
+            renderChatMessages('user-chat-messages', stateData.user_data.messages || [], 'user');
+        }
+
+        async function sendChatMessage(uid) {
+            const inputId = uid ? 'admin-chat-input' : 'user-chat-input';
+            const input = document.getElementById(inputId);
+            const text = input.value.trim();
+            if(!text) return;
+            
+            // Optimistic update optional, but we can just clear and call API
+            input.value = '';
+            if (await apiCall('send_chat_message', { text, uid })) {
+                // reloadData is called inside apiCall
+            }
+        }
+
+        function sendChatMessageAdmin() {
+            if(currentAdminChatUid) {
+                sendChatMessage(currentAdminChatUid);
+            }
+        }
+
         function renderAdminView() {
             const list = document.getElementById('admin-list');
+            const bcList = document.getElementById('broadcast-users-list');
             list.innerHTML = '';
+            bcList.innerHTML = '';
             const users = stateData.all_users || {};
             
             if(Object.keys(users).length === 0) {
@@ -361,45 +413,80 @@
             }
             
             for (const [uid, udata] of Object.entries(users)) {
+                const name = udata.first_name || udata.username || uid;
+                
+                // Add to broadcast list
+                const bcItem = document.createElement('label');
+                bcItem.className = 'user-checkbox';
+                bcItem.innerHTML = `<input type="checkbox" value="${uid}" class="bc-checkbox"> <span>${name} (${uid})</span>`;
+                bcList.appendChild(bcItem);
+
+                // Add to main user list
                 const uDiv = document.createElement('div');
                 uDiv.className = 'group';
-                const name = udata.first_name || udata.username || uid;
-                uDiv.innerHTML = `
-                    <div class="group-header">
-                        <strong>👤 ${name}</strong>
-                        <span style="color:var(--hint-color); font-size:12px;">ID: ${uid}</span>
-                    </div>
-                `;
                 
+                let addrsHtml = '';
                 (udata.groups || []).forEach(g => {
                     (g.addresses || []).forEach(a => {
-                        const aDiv = document.createElement('div');
-                        aDiv.className = 'address';
                         const isOff = a.notify_disabled;
-                        aDiv.innerHTML = `
-                            <div class="address-info">
-                                <small style="color:var(--button-color); font-weight:bold;">${g.name}</small>
-                                <span class="address-text">${a.addr}</span>
-                            </div>
-                            <div style="display:flex; flex-direction:column; gap:6px;">
-                                <button onclick="apiCall('admin_toggle_notify', {uid: '${uid}', gid: '${g.id}', aid: '${a.id}'})" class="btn-small" style="background:${isOff?'#9e9e9e':'#4caf50'};">${isOff?'❌ Выкл':'✅ Вкл'}</button>
-                                <button onclick="apiCall('admin_delete_address', {uid: '${uid}', gid: '${g.id}', aid: '${a.id}'})" class="red btn-small">🗑 Удал</button>
-                            </div>
-                        `;
-                        uDiv.appendChild(aDiv);
+                        addrsHtml += `<div class="address"><div class="address-info"><small style="color:var(--button-color); font-weight:bold;">${g.name}</small><span class="address-text">${a.addr}</span></div><div style="display:flex; flex-direction:column; gap:6px;"><button onclick="apiCall('admin_toggle_notify', {uid: '${uid}', gid: '${g.id}', aid: '${a.id}'})" class="btn-small" style="background:${isOff?'#9e9e9e':'#4caf50'};">${isOff?'❌ Выкл':'✅ Вкл'}</button><button onclick="apiCall('admin_delete_address', {uid: '${uid}', gid: '${g.id}', aid: '${a.id}'})" class="red btn-small">🗑 Удал</button></div></div>`;
                     });
                 });
+
+                uDiv.innerHTML = `
+                    <div class="group-header">
+                        <div><strong>👤 ${name}</strong> <span style="color:var(--hint-color); font-size:12px; margin-left:8px;">ID: ${uid}</span></div>
+                        <button class="outline btn-small" onclick="openAdminChat('${uid}', '${name}')">💬 Чат</button>
+                    </div>
+                    ${addrsHtml}
+                `;
                 list.appendChild(uDiv);
+            }
+        }
+
+        function selectAllUsers() {
+            document.querySelectorAll('.bc-checkbox').forEach(cb => cb.checked = true);
+        }
+
+        async function sendBroadcast() {
+            const text = document.getElementById('broadcast-text').value.trim();
+            const uids = Array.from(document.querySelectorAll('.bc-checkbox:checked')).map(cb => cb.value);
+            
+            if(!text) return showToast('Введите текст рассылки!', true);
+            if(uids.length === 0) return showToast('Выберите хотя бы одного пользователя!', true);
+            
+            if (await apiCall('admin_broadcast', { text, uids })) {
+                showToast(`✅ Рассылка отправлена (${uids.length} чел.)`);
+                document.getElementById('broadcast-text').value = '';
+                document.querySelectorAll('.bc-checkbox').forEach(cb => cb.checked = false);
+            }
+        }
+
+        function openAdminChat(uid, name) {
+            currentAdminChatUid = uid;
+            document.getElementById('admin-main').classList.add('hidden');
+            document.getElementById('admin-chat-view').classList.remove('hidden');
+            document.getElementById('admin-chat-title').innerText = `Чат с ${name}`;
+            renderAdminChat(uid);
+        }
+
+        function closeAdminChat() {
+            currentAdminChatUid = null;
+            document.getElementById('admin-chat-view').classList.add('hidden');
+            document.getElementById('admin-main').classList.remove('hidden');
+        }
+
+        function renderAdminChat(uid) {
+            const user = stateData.all_users[uid];
+            if(user) {
+                renderChatMessages('admin-chat-messages', user.messages || [], 'admin');
             }
         }
 
         async function addAddress() {
             const name = document.getElementById('name').value;
             const address = document.getElementById('address').value;
-            if(!name || !address) {
-                showToast('Заполните все поля!', true);
-                return;
-            }
+            if(!name || !address) return showToast('Заполните все поля!', true);
             if (await apiCall('add_address', { group_name: name, address })) {
                 showToast('✅ Адрес успешно добавлен');
                 document.getElementById('address').value = '';
@@ -410,10 +497,7 @@
             const uid = document.getElementById('admin-uid').value;
             const name = document.getElementById('admin-name').value;
             const address = document.getElementById('admin-address').value;
-            if(!uid || !name || !address) {
-                showToast('Заполните все поля!', true);
-                return;
-            }
+            if(!uid || !name || !address) return showToast('Заполните все поля!', true);
             if (await apiCall('admin_add_address', { uid, group_name: name, address })) {
                 showToast('✅ Адрес добавлен пользователю');
                 document.getElementById('admin-address').value = '';
@@ -424,12 +508,12 @@
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.getElementById('tab-' + tab).classList.add('active');
             
-            document.getElementById('view-user').classList.add('hidden');
-            document.getElementById('view-admin').classList.add('hidden');
+            document.querySelectorAll('.view-section').forEach(v => v.classList.add('hidden'));
             document.getElementById('view-' + tab).classList.remove('hidden');
         }
 
         loadData();
+        // setInterval(loadData, 5000); // Polling for new messages can be added if needed
     </script>
 </body>
 </html>

@@ -227,6 +227,53 @@ async def web_api_action(request):
             save_state(state)
             return web.json_response({"success": True})
             
+        elif action == "admin_broadcast" and is_admin:
+            uids = payload.get("uids", [])
+            text = payload.get("text", "").strip()
+            if not text or not uids:
+                return web.json_response({"error": "Invalid data"}, status=400)
+            
+            bot = request.app['bot_app'].bot
+            sent = 0
+            for target_uid in uids:
+                target_uid = str(target_uid)
+                target_user = state.setdefault("users", {}).setdefault(target_uid, {"groups": []})
+                msg_obj = {"id": secrets.token_hex(4), "from": "admin", "text": text, "ts": int(time.time())}
+                target_user.setdefault("messages", []).append(msg_obj)
+                try:
+                    await bot.send_message(chat_id=int(target_uid), text=f"📩 Рассылка от администратора:\n\n{text}")
+                    sent += 1
+                except Exception as e:
+                    logger.error(f"Error sending broadcast to {target_uid}: {e}")
+            save_state(state)
+            return web.json_response({"success": True, "sent": sent})
+
+        elif action == "send_chat_message":
+            text = payload.get("text", "").strip()
+            if not text:
+                return web.json_response({"error": "Invalid data"}, status=400)
+            
+            bot = request.app['bot_app'].bot
+            target_uid = str(payload.get("uid")) if is_admin and payload.get("uid") else uid
+            target_user = state.setdefault("users", {}).setdefault(target_uid, {"groups": []})
+            
+            sender_role = "admin" if is_admin and payload.get("uid") else "user"
+            msg_obj = {"id": secrets.token_hex(4), "from": sender_role, "text": text, "ts": int(time.time())}
+            target_user.setdefault("messages", []).append(msg_obj)
+            save_state(state)
+            
+            try:
+                if sender_role == "admin":
+                    await bot.send_message(chat_id=int(target_uid), text=f"📩 Сообщение от администратора:\n\n{text}")
+                else:
+                    admin_chat_id = cfg.get("ADMIN_CHAT_ID", ADMIN_ID)
+                    user_name = user.get("first_name") or user.get("username") or uid
+                    await bot.send_message(chat_id=int(admin_chat_id), text=f"📩 Новое сообщение в Mini App от {user_name} ({uid}):\n\n{text}")
+            except Exception as e:
+                logger.error(f"Error sending chat notification: {e}")
+                
+            return web.json_response({"success": True})
+            
         return web.json_response({"error": "Unknown action"}, status=400)
     except Exception as e:
         logger.error(f"Error in web_api_action: {e}")
@@ -234,6 +281,7 @@ async def web_api_action(request):
 
 async def start_web_server(app):
     webapp = web.Application()
+    webapp['bot_app'] = app
     webapp.router.add_get('/', web_index)
     webapp.router.add_post('/api/get', web_api_get)
     webapp.router.add_post('/api/action', web_api_action)
