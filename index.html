@@ -2,8 +2,8 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BTC Alarm - Управление</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BTC Alarm</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
@@ -27,166 +27,111 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background: var(--secondary-bg-color);
+            background: var(--bg-color);
             color: var(--text-color);
-            padding: 16px;
             margin: 0;
+            padding: 0;
             line-height: 1.5;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
 
-        h2, h3 {
-            color: var(--text-color);
-            margin-top: 24px;
-            margin-bottom: 12px;
-            font-weight: 600;
-        }
-
-        h2 { text-align: center; }
-
+        h2, h3 { color: var(--text-color); margin-top: 20px; margin-bottom: 12px; font-weight: 600; }
+        
         input, button, textarea {
-            width: 100%;
-            padding: 14px 16px;
-            margin: 8px 0;
-            border-radius: 12px;
-            border: none;
-            font-size: 16px;
-            box-sizing: border-box;
-            transition: all 0.2s ease;
+            width: 100%; padding: 14px 16px; margin: 8px 0; border-radius: 12px;
+            border: none; font-size: 16px; box-sizing: border-box; transition: all 0.2s ease;
+        }
+        textarea { resize: vertical; min-height: 80px; }
+        
+        input, textarea {
+            background: var(--secondary-bg-color); color: var(--text-color);
+            border: 1px solid transparent;
+        }
+        input:focus, textarea:focus {
+            outline: none; border-color: var(--button-color); background: var(--bg-color);
         }
         
-        textarea {
-            resize: vertical;
-            min-height: 80px;
-        }
-
-        input, textarea {
-            background: var(--card-bg-color);
-            color: var(--text-color);
-            border: 1px solid var(--border-color);
-            box-shadow: 0 2px 4px var(--shadow-color);
-        }
-
-        input:focus, textarea:focus {
-            outline: none;
-            border-color: var(--button-color);
-            box-shadow: 0 0 0 2px rgba(36, 129, 204, 0.2);
-        }
-
         button {
-            background: var(--button-color);
-            color: var(--button-text-color);
-            font-weight: 600;
+            background: var(--button-color); color: var(--button-text-color); font-weight: 600;
             cursor: pointer;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
         }
-
-        button:active {
-            transform: scale(0.98);
-            opacity: 0.9;
-        }
-
+        button:active { transform: scale(0.98); opacity: 0.9; }
         button.red { background: #e53935; color: white; }
         button.green { background: #4caf50; color: white; }
-        button.outline { 
-            background: transparent; 
-            color: var(--button-color); 
-            border: 1px solid var(--button-color);
-            box-shadow: none;
-        }
+        button.outline { background: transparent; color: var(--button-color); border: 1px solid var(--button-color); }
+        .btn-small { padding: 8px 12px; font-size: 13px; width: auto; margin: 0; border-radius: 8px; }
 
-        .list { display: flex; flex-direction: column; gap: 16px; margin: 16px 0; }
-
-        .group {
-            background: var(--card-bg-color);
-            padding: 16px;
-            border-radius: 16px;
-            box-shadow: 0 4px 12px var(--shadow-color);
-            border: 1px solid var(--border-color);
-        }
-
-        .group-header {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;
-        }
-
+        .list { display: flex; flex-direction: column; gap: 12px; margin: 12px 0; }
+        .group { background: var(--card-bg-color); padding: 16px; border-radius: 16px; box-shadow: 0 2px 8px var(--shadow-color); border: 1px solid var(--border-color); }
+        .group-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; }
         .group-header strong { font-size: 18px; }
-
-        .address {
-            display: flex; justify-content: space-between; align-items: center;
-            background: var(--secondary-bg-color); padding: 12px; border-radius: 10px; margin: 8px 0; gap: 12px;
-        }
-
+        .address { display: flex; justify-content: space-between; align-items: center; background: var(--secondary-bg-color); padding: 12px; border-radius: 10px; margin: 8px 0; gap: 12px; }
         .address-info { display: flex; flex-direction: column; gap: 4px; overflow: hidden; }
-
         .address-text { font-family: 'Courier New', Courier, monospace; font-size: 13px; color: var(--text-color); word-break: break-all; }
 
-        .tabs {
-            display: flex; background: var(--card-bg-color); border-radius: 12px;
-            padding: 4px; margin-bottom: 24px; box-shadow: 0 2px 8px var(--shadow-color);
-        }
-
-        .tab {
-            padding: 12px; cursor: pointer; color: var(--hint-color); font-weight: 600;
-            flex: 1; text-align: center; border-radius: 8px; transition: all 0.2s;
-        }
-
-        .tab.active { background: var(--button-color); color: var(--button-text-color); }
+        .tabs { display: flex; background: var(--bg-color); padding: 0; border-bottom: 1px solid var(--border-color); flex-shrink: 0; z-index: 50; }
+        .tab { padding: 14px; cursor: pointer; color: var(--hint-color); font-weight: 600; flex: 1; text-align: center; transition: all 0.2s; border-bottom: 3px solid transparent; }
+        .tab.active { color: var(--button-color); border-bottom: 3px solid var(--button-color); }
 
         .hidden { display: none !important; }
 
-        /* Toast notification */
+        /* Toasts */
         #toast-container { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column; gap: 8px; pointer-events: none; width: 90%; max-width: 400px; }
         .toast { padding: 14px 20px; border-radius: 12px; color: #fff; font-weight: 500; font-size: 15px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); animation: slideDown 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, fadeOut 0.3s ease 2.7s forwards; }
         .toast.success { background: #4caf50; }
         .toast.error { background: #f44336; }
-
         @keyframes slideDown { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
 
-        .btn-small { padding: 8px 12px; font-size: 13px; width: auto; margin: 0; border-radius: 8px; }
+        .empty-state { text-align: center; padding: 32px 16px; color: var(--hint-color); background: var(--secondary-bg-color); border-radius: 16px; }
+
+        /* App Sections */
+        .view-section { display: flex; flex-direction: column; height: 100%; overflow: hidden; background: var(--secondary-bg-color); position: relative; }
+        .scrollable { overflow-y: auto; padding: 16px; flex: 1; }
+
+        /* Telegram-like Chat UI */
+        .chat-view { display: flex; flex-direction: column; height: 100%; background: var(--bg-color); }
         
-        .empty-state { text-align: center; padding: 32px 16px; color: var(--hint-color); background: var(--card-bg-color); border-radius: 16px; border: 1px dashed var(--border-color); }
+        /* Chat List */
+        .chat-list { overflow-y: auto; flex: 1; background: var(--bg-color); }
+        .chat-item { display: flex; align-items: center; padding: 10px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer; transition: background 0.2s; }
+        .chat-item:active { background: var(--secondary-bg-color); }
+        .avatar { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; font-weight: 500; flex-shrink: 0; }
+        .chat-item-info { margin-left: 14px; flex: 1; overflow: hidden; display: flex; flex-direction: column; justify-content: center; }
+        .chat-item-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 3px; }
+        .chat-item-name { font-weight: 600; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-color); }
+        .chat-item-time { font-size: 13px; color: var(--hint-color); flex-shrink: 0; margin-left: 8px; }
+        .chat-item-last { font-size: 14px; color: var(--hint-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* Conversation */
+        .chat-conversation { display: flex; flex-direction: column; height: 100%; background: var(--secondary-bg-color); z-index: 100; position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
         
-        /* Chat UI */
-        .chat-container {
-            display: flex; flex-direction: column; height: 60vh;
-            background: var(--card-bg-color); border-radius: 16px; overflow: hidden;
-            border: 1px solid var(--border-color); box-shadow: 0 4px 12px var(--shadow-color);
-        }
-        .chat-messages {
-            flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px;
-            background: var(--secondary-bg-color);
-        }
-        .msg-bubble {
-            max-width: 80%; padding: 10px 14px; border-radius: 16px; font-size: 15px; word-break: break-word;
-        }
-        .msg-bubble.me {
-            align-self: flex-end; background: var(--button-color); color: var(--button-text-color);
-            border-bottom-right-radius: 4px;
-        }
-        .msg-bubble.them {
-            align-self: flex-start; background: var(--card-bg-color); color: var(--text-color);
-            border: 1px solid var(--border-color); border-bottom-left-radius: 4px;
-        }
-        .msg-time { font-size: 11px; opacity: 0.7; margin-top: 4px; text-align: right; }
+        .chat-header { background: var(--bg-color); padding: 8px 16px; display: flex; align-items: center; border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
+        .back-btn { background: transparent; border: none; color: var(--button-color); font-size: 24px; cursor: pointer; padding: 0 16px 0 0; width: auto; box-shadow: none; display: flex; align-items: center; }
+        .chat-header .avatar { width: 40px; height: 40px; font-size: 16px; }
+        .chat-header-info { margin-left: 12px; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
+        .chat-header-name { font-weight: 600; font-size: 16px; color: var(--text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .chat-header-status { font-size: 13px; color: var(--hint-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         
-        .chat-input-area {
-            padding: 12px; background: var(--card-bg-color); border-top: 1px solid var(--border-color);
-            display: flex; gap: 8px; align-items: center;
-        }
-        .chat-input-area input { margin: 0; flex: 1; }
-        .chat-input-area button { margin: 0; width: auto; padding: 12px 20px; }
-        
-        .broadcast-users {
-            max-height: 200px; overflow-y: auto; background: var(--secondary-bg-color);
-            border-radius: 12px; padding: 12px; margin-bottom: 12px;
-        }
-        .user-checkbox {
-            display: flex; align-items: center; gap: 12px; padding: 8px;
-            border-bottom: 1px solid var(--border-color);
-        }
+        .messages-container { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .msg-bubble { max-width: 80%; padding: 8px 12px; border-radius: 16px; font-size: 15px; word-break: break-word; position: relative; line-height: 1.4; }
+        .msg-bubble.me { align-self: flex-end; background: var(--button-color); color: var(--button-text-color); border-bottom-right-radius: 4px; }
+        .msg-bubble.them { align-self: flex-start; background: var(--bg-color); color: var(--text-color); border-bottom-left-radius: 4px; box-shadow: 0 1px 2px var(--shadow-color); }
+        .msg-time { font-size: 11px; opacity: 0.7; float: right; margin-left: 12px; margin-top: 4px; }
+
+        .input-area { background: var(--bg-color); padding: 8px 12px; border-top: 1px solid var(--border-color); display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
+        .input-area input { margin: 0; flex: 1; border-radius: 20px; padding: 12px 16px; background: var(--secondary-bg-color); border: none; box-shadow: none; }
+        .input-area button { margin: 0; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; padding: 0; flex-shrink: 0; }
+        .input-area button svg { width: 20px; height: 20px; fill: white; margin-left: 2px; }
+
+        /* Broadcast UI */
+        .broadcast-users { max-height: 200px; overflow-y: auto; background: var(--secondary-bg-color); border-radius: 12px; padding: 8px; margin-bottom: 12px; }
+        .user-checkbox { display: flex; align-items: center; gap: 12px; padding: 8px; border-bottom: 1px solid var(--border-color); }
         .user-checkbox:last-child { border-bottom: none; }
-        .user-checkbox input { width: 20px; height: 20px; margin: 0; }
+        .user-checkbox input { width: 20px; height: 20px; margin: 0; accent-color: var(--button-color); }
     </style>
 </head>
 <body>
@@ -194,47 +139,65 @@
 
     <div id="tabs-container" class="tabs">
         <div id="tab-user" class="tab active" onclick="switchTab('user')">Мои адреса</div>
-        <div id="tab-chat" class="tab" onclick="switchTab('chat')">Связь</div>
+        <div id="tab-chat" class="tab" onclick="switchTab('chat')">Чат</div>
         <div id="tab-admin" class="tab hidden" onclick="switchTab('admin')">Админ</div>
     </div>
 
-    <!-- USER ADDRESSES -->
+    <!-- USER ADDRESSES VIEW -->
     <div id="view-user" class="view-section">
-        <h3>📂 Ваши адреса</h3>
-        <div id="user-list" class="list">
-            <div class="empty-state">Загрузка...</div>
-        </div>
-
-        <h3>➕ Добавить новый адрес</h3>
-        <div class="group" style="margin-top:0;">
-            <input type="text" id="name" placeholder="Название (напр.: Основной)">
-            <input type="text" id="address" placeholder="BTC адрес">
-            <button onclick="addAddress()">Добавить адрес</button>
-        </div>
-    </div>
-
-    <!-- USER CHAT -->
-    <div id="view-chat" class="view-section hidden">
-        <h3>Чат с администратором</h3>
-        <div class="chat-container">
-            <div id="user-chat-messages" class="chat-messages">
-                <!-- Messages will load here -->
+        <div class="scrollable">
+            <h3>📂 Ваши адреса</h3>
+            <div id="user-list" class="list">
+                <div class="empty-state">Загрузка...</div>
             </div>
-            <div class="chat-input-area">
-                <input type="text" id="user-chat-input" placeholder="Введите сообщение...">
-                <button onclick="sendChatMessage(null)">Отправить</button>
+
+            <h3>➕ Добавить новый адрес</h3>
+            <div class="group" style="margin-top:0;">
+                <input type="text" id="name" placeholder="Название (напр.: Основной)">
+                <input type="text" id="address" placeholder="BTC адрес">
+                <button onclick="addAddress()">Добавить адрес</button>
             </div>
         </div>
     </div>
 
-    <!-- ADMIN PANEL -->
+    <!-- CHAT VIEW (For Both Admin and User) -->
+    <div id="view-chat" class="view-section hidden" style="background: var(--bg-color);">
+        <!-- Admin Chat List -->
+        <div id="chat-list-container" class="chat-list hidden">
+            <!-- Populated via JS -->
+        </div>
+
+        <!-- Single Conversation (Fullscreen overlay inside the view) -->
+        <div id="chat-conversation" class="chat-conversation hidden">
+            <div class="chat-header">
+                <button class="back-btn" id="chat-back-btn" onclick="closeChat()">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                </button>
+                <div class="avatar" id="chat-header-avatar" style="background: #ccc;">?</div>
+                <div class="chat-header-info">
+                    <div class="chat-header-name" id="chat-header-name">Загрузка...</div>
+                    <div class="chat-header-status" id="chat-header-status">...</div>
+                </div>
+            </div>
+            <div class="messages-container" id="chat-messages">
+                <!-- Messages -->
+            </div>
+            <div class="input-area">
+                <input type="text" id="chat-input" placeholder="Сообщение..." onkeypress="handleChatKeyPress(event)">
+                <button onclick="sendChatMessage()">
+                    <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMIN VIEW -->
     <div id="view-admin" class="view-section hidden">
-        <!-- Main Admin List -->
-        <div id="admin-main">
+        <div class="scrollable">
             <h3>Рассылка сообщений</h3>
             <div class="group" style="margin-top:0;">
                 <div class="broadcast-users" id="broadcast-users-list">
-                    <!-- Checkboxes will appear here -->
+                    <!-- Checkboxes -->
                 </div>
                 <button class="outline btn-small" onclick="selectAllUsers()" style="margin-bottom:8px;">Выбрать всех</button>
                 <textarea id="broadcast-text" placeholder="Текст рассылки..."></textarea>
@@ -254,21 +217,6 @@
                 <button onclick="adminAddAddress()">Добавить пользователю</button>
             </div>
         </div>
-
-        <!-- Admin Chat View (Hidden by default) -->
-        <div id="admin-chat-view" class="hidden">
-            <button class="outline" onclick="closeAdminChat()" style="margin-bottom:16px;">⬅ Назад к списку</button>
-            <h3 id="admin-chat-title">Чат с пользователем</h3>
-            <div class="chat-container">
-                <div id="admin-chat-messages" class="chat-messages">
-                    <!-- Messages will load here -->
-                </div>
-                <div class="chat-input-area">
-                    <input type="text" id="admin-chat-input" placeholder="Введите сообщение...">
-                    <button onclick="sendChatMessageAdmin()">Отправить</button>
-                </div>
-            </div>
-        </div>
     </div>
 
     <script>
@@ -277,7 +225,8 @@
         webApp.expand();
 
         let stateData = null;
-        let currentAdminChatUid = null;
+        let currentChatUid = null; // null for user communicating with admin, or UID for admin
+        let pollingInterval = null;
 
         function showToast(msg, isError = false) {
             const container = document.getElementById('toast-container');
@@ -297,7 +246,7 @@
                 });
                 const data = await res.json();
                 if (data.error) throw new Error(data.error);
-                await loadData();
+                await loadData(false); // Silent reload
                 return true;
             } catch (e) {
                 showToast(e.message, true);
@@ -305,7 +254,7 @@
             }
         }
 
-        async function loadData() {
+        async function loadData(showError = true) {
             try {
                 const res = await fetch('/api/get', {
                     method: 'POST',
@@ -316,21 +265,61 @@
                 
                 if (stateData.is_admin) {
                     document.getElementById('tab-admin').classList.remove('hidden');
+                    document.getElementById('chat-list-container').classList.remove('hidden');
+                } else {
+                    // Normal user directly sees conversation
+                    document.getElementById('chat-conversation').classList.remove('hidden');
+                    document.getElementById('chat-back-btn').classList.add('hidden'); // No back button for user
+                    document.getElementById('chat-header-avatar').innerText = 'А';
+                    document.getElementById('chat-header-avatar').style.background = getAvatarColor('admin');
+                    document.getElementById('chat-header-name').innerText = 'Администратор';
+                    document.getElementById('chat-header-status').innerText = 'Служба поддержки';
                 }
                 
                 renderUserView();
-                renderUserChat();
+                
                 if (stateData.is_admin) {
                     renderAdminView();
-                    if(currentAdminChatUid) {
-                        renderAdminChat(currentAdminChatUid); // Refresh open chat
+                    renderAdminChatList();
+                    if (currentChatUid) {
+                        refreshConversation();
                     }
+                } else {
+                    refreshConversation();
                 }
             } catch (e) {
-                showToast('Ошибка загрузки данных', true);
+                if(showError) showToast('Ошибка загрузки данных', true);
             }
         }
 
+        // --- Utility ---
+        function getAvatarColor(id) {
+            const colors = ['#e56555', '#f28c48', '#8e85ee', '#549cdd', '#4cb382', '#56b3f5', '#6dc534'];
+            let hash = 0;
+            for(let i=0; i<id.length; i++) hash = id.charCodeAt(i) + ((hash << 5) - hash);
+            return colors[Math.abs(hash) % colors.length];
+        }
+        
+        function getInitials(name) {
+            if(!name) return '?';
+            const words = name.trim().split(/\s+/);
+            if(words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase();
+            return name.substring(0, 2).toUpperCase();
+        }
+
+        function formatTime(ts) {
+            const d = new Date(ts * 1000);
+            return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+        }
+        
+        function formatDate(ts) {
+            const d = new Date(ts * 1000);
+            const today = new Date();
+            if (d.toDateString() === today.toDateString()) return formatTime(ts);
+            return `${d.getDate().toString().padStart(2, '0')}.${(d.getMonth()+1).toString().padStart(2, '0')}`;
+        }
+
+        // --- Render Addresses ---
         function renderUserView() {
             const list = document.getElementById('user-list');
             list.innerHTML = '';
@@ -355,51 +344,154 @@
             });
         }
 
-        function formatTime(ts) {
-            const d = new Date(ts * 1000);
-            return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
-        }
-
-        function renderChatMessages(containerId, messages, myRole) {
-            const container = document.getElementById(containerId);
+        // --- Chat Functions ---
+        function renderAdminChatList() {
+            const container = document.getElementById('chat-list-container');
             container.innerHTML = '';
-            if(!messages || messages.length === 0) {
-                container.innerHTML = '<div class="empty-state">Нет сообщений.</div>';
+            const users = stateData.all_users || {};
+            
+            // Sort users by last message time
+            const chatList = [];
+            for (const [uid, udata] of Object.entries(users)) {
+                const name = udata.first_name || udata.username || `User ${uid}`;
+                const msgs = udata.messages || [];
+                const lastMsg = msgs.length > 0 ? msgs[msgs.length - 1] : null;
+                const lastTs = lastMsg ? lastMsg.ts : 0;
+                chatList.push({ uid, name, username: udata.username, msgs, lastMsg, lastTs });
+            }
+            
+            chatList.sort((a, b) => b.lastTs - a.lastTs);
+            
+            if(chatList.length === 0) {
+                container.innerHTML = '<div class="empty-state" style="margin:20px;">Нет доступных чатов.</div>';
                 return;
             }
-            messages.forEach(m => {
-                const isMe = m.from === myRole;
-                const b = document.createElement('div');
-                b.className = `msg-bubble ${isMe ? 'me' : 'them'}`;
-                b.innerHTML = `<div>${m.text}</div><div class="msg-time">${formatTime(m.ts)}</div>`;
-                container.appendChild(b);
+
+            chatList.forEach(chat => {
+                const item = document.createElement('div');
+                item.className = 'chat-item';
+                item.onclick = () => openChat(chat.uid);
+                
+                const initials = getInitials(chat.name);
+                const color = getAvatarColor(chat.uid);
+                const timeStr = chat.lastTs ? formatDate(chat.lastTs) : '';
+                const lastText = chat.lastMsg ? (chat.lastMsg.from === 'admin' ? 'Вы: ' : '') + chat.lastMsg.text : 'Нет сообщений';
+                
+                item.innerHTML = `
+                    <div class="avatar" style="background: ${color};">${initials}</div>
+                    <div class="chat-item-info">
+                        <div class="chat-item-header">
+                            <div class="chat-item-name">${chat.name}</div>
+                            <div class="chat-item-time">${timeStr}</div>
+                        </div>
+                        <div class="chat-item-last">${lastText}</div>
+                    </div>
+                `;
+                container.appendChild(item);
             });
-            container.scrollTop = container.scrollHeight;
         }
 
-        function renderUserChat() {
-            renderChatMessages('user-chat-messages', stateData.user_data.messages || [], 'user');
+        function openChat(uid) {
+            currentChatUid = uid;
+            const user = stateData.all_users[uid];
+            const name = user.first_name || user.username || `User ${uid}`;
+            const username = user.username ? `@${user.username}` : `ID: ${uid}`;
+            
+            document.getElementById('chat-header-avatar').innerText = getInitials(name);
+            document.getElementById('chat-header-avatar').style.background = getAvatarColor(uid);
+            document.getElementById('chat-header-name').innerText = name;
+            document.getElementById('chat-header-status').innerText = username;
+            
+            document.getElementById('chat-conversation').classList.remove('hidden');
+            document.getElementById('tabs-container').classList.add('hidden'); // Hide tabs in chat
+            
+            refreshConversation();
         }
 
-        async function sendChatMessage(uid) {
-            const inputId = uid ? 'admin-chat-input' : 'user-chat-input';
-            const input = document.getElementById(inputId);
+        function closeChat() {
+            currentChatUid = null;
+            document.getElementById('chat-conversation').classList.add('hidden');
+            document.getElementById('tabs-container').classList.remove('hidden'); // Show tabs back
+            renderAdminChatList(); // Refresh list to update read statuses/last msgs
+        }
+
+        function refreshConversation() {
+            let messages = [];
+            let myRole = '';
+            
+            if (stateData.is_admin) {
+                if (!currentChatUid) return;
+                const user = stateData.all_users[currentChatUid];
+                if(user) messages = user.messages || [];
+                myRole = 'admin';
+            } else {
+                messages = stateData.user_data.messages || [];
+                myRole = 'user';
+            }
+            
+            const container = document.getElementById('chat-messages');
+            
+            // Check if we need to auto-scroll (only if we were already at bottom or if it's first render)
+            const isAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 50;
+            
+            container.innerHTML = '';
+            if(messages.length === 0) {
+                container.innerHTML = '<div style="text-align:center; color:var(--hint-color); margin-top:auto; margin-bottom:auto;">Здесь будет история сообщений.</div>';
+            } else {
+                let lastDate = '';
+                messages.forEach(m => {
+                    const d = new Date(m.ts * 1000).toDateString();
+                    if(d !== lastDate) {
+                        const dateEl = document.createElement('div');
+                        dateEl.style.cssText = 'text-align:center; font-size:12px; color:white; background:rgba(0,0,0,0.2); padding:2px 8px; border-radius:10px; align-self:center; margin:8px 0;';
+                        dateEl.innerText = new Date(m.ts * 1000).toLocaleDateString('ru-RU', {day:'numeric', month:'short'});
+                        container.appendChild(dateEl);
+                        lastDate = d;
+                    }
+                    
+                    const isMe = m.from === myRole;
+                    const b = document.createElement('div');
+                    b.className = `msg-bubble ${isMe ? 'me' : 'them'}`;
+                    b.innerHTML = `${m.text}<span class="msg-time">${formatTime(m.ts)}</span>`;
+                    container.appendChild(b);
+                });
+            }
+            
+            if (isAtBottom || messages.length > 0) {
+                container.scrollTop = container.scrollHeight;
+            }
+        }
+
+        function handleChatKeyPress(e) {
+            if (e.key === 'Enter') {
+                sendChatMessage();
+            }
+        }
+
+        async function sendChatMessage() {
+            const input = document.getElementById('chat-input');
             const text = input.value.trim();
             if(!text) return;
             
-            // Optimistic update optional, but we can just clear and call API
             input.value = '';
-            if (await apiCall('send_chat_message', { text, uid })) {
-                // reloadData is called inside apiCall
+            
+            // Optimistic render
+            const container = document.getElementById('chat-messages');
+            const b = document.createElement('div');
+            b.className = `msg-bubble me`;
+            b.innerHTML = `${text}<span class="msg-time">${formatTime(Math.floor(Date.now()/1000))}</span>`;
+            
+            // Remove empty state if present
+            if(container.children.length === 1 && container.children[0].innerText.includes('Здесь будет')) {
+                container.innerHTML = '';
             }
+            container.appendChild(b);
+            container.scrollTop = container.scrollHeight;
+
+            await apiCall('send_chat_message', { text, uid: currentChatUid });
         }
 
-        function sendChatMessageAdmin() {
-            if(currentAdminChatUid) {
-                sendChatMessage(currentAdminChatUid);
-            }
-        }
-
+        // --- Admin Functions ---
         function renderAdminView() {
             const list = document.getElementById('admin-list');
             const bcList = document.getElementById('broadcast-users-list');
@@ -436,7 +528,7 @@
                 uDiv.innerHTML = `
                     <div class="group-header">
                         <div><strong>👤 ${name}</strong> <span style="color:var(--hint-color); font-size:12px; margin-left:8px;">ID: ${uid}</span></div>
-                        <button class="outline btn-small" onclick="openAdminChat('${uid}', '${name}')">💬 Чат</button>
+                        <button class="outline btn-small" onclick="switchTab('chat'); openChat('${uid}');">💬 Чат</button>
                     </div>
                     ${addrsHtml}
                 `;
@@ -459,27 +551,6 @@
                 showToast(`✅ Рассылка отправлена (${uids.length} чел.)`);
                 document.getElementById('broadcast-text').value = '';
                 document.querySelectorAll('.bc-checkbox').forEach(cb => cb.checked = false);
-            }
-        }
-
-        function openAdminChat(uid, name) {
-            currentAdminChatUid = uid;
-            document.getElementById('admin-main').classList.add('hidden');
-            document.getElementById('admin-chat-view').classList.remove('hidden');
-            document.getElementById('admin-chat-title').innerText = `Чат с ${name}`;
-            renderAdminChat(uid);
-        }
-
-        function closeAdminChat() {
-            currentAdminChatUid = null;
-            document.getElementById('admin-chat-view').classList.add('hidden');
-            document.getElementById('admin-main').classList.remove('hidden');
-        }
-
-        function renderAdminChat(uid) {
-            const user = stateData.all_users[uid];
-            if(user) {
-                renderChatMessages('admin-chat-messages', user.messages || [], 'admin');
             }
         }
 
@@ -510,10 +581,22 @@
             
             document.querySelectorAll('.view-section').forEach(v => v.classList.add('hidden'));
             document.getElementById('view-' + tab).classList.remove('hidden');
+            
+            // If switching to chat and admin, ensure we show list if no active chat
+            if(tab === 'chat' && stateData && stateData.is_admin && !currentChatUid) {
+                document.getElementById('chat-list-container').classList.remove('hidden');
+                document.getElementById('chat-conversation').classList.add('hidden');
+            }
         }
 
         loadData();
-        // setInterval(loadData, 5000); // Polling for new messages can be added if needed
+        
+        // Auto refresh chat (polling)
+        pollingInterval = setInterval(() => {
+            if (document.visibilityState === 'visible') {
+                loadData(false);
+            }
+        }, 5000);
     </script>
 </body>
 </html>
