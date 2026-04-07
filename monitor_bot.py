@@ -249,16 +249,12 @@ async def start_web_server(app):
 # ---------------- inline UI builders ----------------
 def main_menu_markup(user_id: str = None):
     cfg = load_config()
-    webapp_url = cfg.get("WEBAPP_URL", "")
     kb = []
-    if webapp_url:
-        kb.append([InlineKeyboardButton("📱 Открыть Mini App", web_app=WebAppInfo(url=webapp_url))])
 
     kb.extend([
         [InlineKeyboardButton("📂 Список адресов", callback_data="menu_groups")],
         [InlineKeyboardButton("➕ Добавить адрес", callback_data="menu_add_address")],
-        [InlineKeyboardButton("🗑 Удалить название", callback_data="menu_remove_group")],
-        [InlineKeyboardButton("🔁 Test notify", callback_data="menu_test_notify")]
+        [InlineKeyboardButton("🗑 Удалить название", callback_data="menu_remove_group")]
     ])
     if user_id == str(cfg.get("ADMIN_CHAT_ID", ADMIN_ID)):
         kb.append([InlineKeyboardButton("👑 Админ панель", callback_data="admin_panel")])
@@ -384,10 +380,8 @@ async def callback_router(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         user_data["username"] = user.username
         user_data["first_name"] = user.first_name
 
-    if data in ("menu_main", "menu_test_notify"):
+    if data == "menu_main":
         ctx.chat_data.pop("flow", None)
-        if data == "menu_test_notify":
-            await test_notify_internal(ctx, chat_id)
         await update_menu(ctx, chat_id, "Главное меню:", main_menu_markup(user_id))
         return
 
@@ -778,23 +772,6 @@ async def text_router(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 async def error_handler(update: object, ctx: ContextTypes.DEFAULT_TYPE) -> None:
     logger.error(f"Ошибка при обработке update: {ctx.error}", exc_info=ctx.error)
 
-# ---------------- test notify ----------------
-async def test_notify_internal(ctx: ContextTypes.DEFAULT_TYPE, chat_id: int):
-    state = load_state()
-    user_data = state.setdefault("users", {}).setdefault(str(chat_id), {"groups": []})
-    groups = user_data.get("groups", [])
-    if not groups or not groups[0].get("addresses"):
-        await ctx.bot.send_message(chat_id=chat_id, text="Нет адресов для теста. Добавьте адрес.")
-        return
-    addr = groups[0]["addresses"][0]["addr"]
-    txid = "testtx_" + secrets.token_hex(6)
-    await ctx.bot.send_message(chat_id=chat_id, text=f"🔔 Тест — новая tx для {addr}\nTx: {txid}")
-    await ctx.bot.send_message(chat_id=chat_id, text=f"✅ Тест — транзакция {txid} получила 1+ подтверждение")
-
-async def test_notify_command(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    chat_id = update.effective_chat.id
-    await test_notify_internal(ctx, chat_id)
-
 # ---------------- monitoring loop ----------------
 async def monitor_loop(app):
     cfg = load_config()
@@ -852,7 +829,8 @@ async def monitor_loop(app):
 
                                 try:
                                     detail = (await client.get(f"{api_base}/txs/{txid}?token={api_token}")).json()
-                                except:
+                                except Exception as e:
+                                    logger.debug(f"Ошибка при получении деталей tx {txid}: {e}")
                                     continue
 
                                 amount_sat = 0
@@ -955,7 +933,6 @@ def main():
     # Регистрация обработчиков
     app.add_handler(CommandHandler("start", cmd_start))
     app.add_handler(CommandHandler("help", cmd_start))
-    app.add_handler(CommandHandler("test_notify", test_notify_command))
     app.add_handler(CallbackQueryHandler(callback_router))
     app.add_handler(MessageHandler(filters.ALL & (~filters.COMMAND), text_router))
     

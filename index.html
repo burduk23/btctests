@@ -6,55 +6,258 @@
     <title>BTC Alarm - Управление</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; background: var(--tg-theme-bg-color, #0f0f0f); color: var(--tg-theme-text-color, #fff); padding: 15px; margin: 0; }
-        h2 { color: var(--tg-theme-button-color, #0088cc); text-align: center; }
-        input, button { width: 100%; padding: 14px; margin: 10px 0; border-radius: 10px; border: none; font-size: 16px; box-sizing: border-box; }
-        input { background: var(--tg-theme-secondary-bg-color, #1f1f1f); color: var(--tg-theme-text-color, #fff); border: 1px solid var(--tg-theme-hint-color, #555); }
-        button { background: var(--tg-theme-button-color, #0088cc); color: var(--tg-theme-button-text-color, #fff); font-weight: bold; cursor: pointer; }
-        button.red { background: #cc3333; }
-        .status { padding: 12px; margin: 10px 0; border-radius: 8px; font-weight: bold; text-align: center; display: none; }
-        .success { background: #004d00; color: #fff; }
-        .error { background: #4d0000; color: #fff; }
-        .list { background: var(--tg-theme-secondary-bg-color, #1a1a1a); padding: 15px; border-radius: 10px; margin: 15px 0; line-height: 1.6; }
-        .group { border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 10px; }
-        .address { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 6px; margin: 5px 0; word-break: break-all; gap: 10px; }
-        .tabs { display: flex; justify-content: space-around; margin-bottom: 20px; }
-        .tab { padding: 10px; cursor: pointer; border-bottom: 2px solid transparent; color: var(--tg-theme-hint-color, #aaa); font-weight: bold; flex-grow: 1; text-align: center; }
-        .tab.active { border-bottom: 2px solid var(--tg-theme-button-color, #0088cc); color: var(--tg-theme-text-color, #fff); }
+        :root {
+            --bg-color: var(--tg-theme-bg-color, #ffffff);
+            --text-color: var(--tg-theme-text-color, #000000);
+            --hint-color: var(--tg-theme-hint-color, #999999);
+            --button-color: var(--tg-theme-button-color, #2481cc);
+            --button-text-color: var(--tg-theme-button-text-color, #ffffff);
+            --secondary-bg-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            --card-bg-color: var(--tg-theme-bg-color, #ffffff);
+            --border-color: rgba(0, 0, 0, 0.1);
+            --shadow-color: rgba(0, 0, 0, 0.05);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --border-color: rgba(255, 255, 255, 0.1);
+                --shadow-color: rgba(0, 0, 0, 0.2);
+            }
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: var(--secondary-bg-color);
+            color: var(--text-color);
+            padding: 16px;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        h2, h3 {
+            color: var(--text-color);
+            margin-top: 24px;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        h2 { text-align: center; }
+
+        input, button {
+            width: 100%;
+            padding: 14px 16px;
+            margin: 8px 0;
+            border-radius: 12px;
+            border: none;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+        }
+
+        input {
+            background: var(--card-bg-color);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 2px 4px var(--shadow-color);
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--button-color);
+            box-shadow: 0 0 0 2px rgba(36, 129, 204, 0.2);
+        }
+
+        button {
+            background: var(--button-color);
+            color: var(--button-text-color);
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        button:active {
+            transform: scale(0.98);
+            opacity: 0.9;
+        }
+
+        button.red {
+            background: #e53935;
+            color: white;
+        }
+
+        .list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin: 16px 0;
+        }
+
+        .group {
+            background: var(--card-bg-color);
+            padding: 16px;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px var(--shadow-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .group-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 12px;
+        }
+
+        .group-header strong {
+            font-size: 18px;
+        }
+
+        .address {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--secondary-bg-color);
+            padding: 12px;
+            border-radius: 10px;
+            margin: 8px 0;
+            gap: 12px;
+        }
+
+        .address-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            overflow: hidden;
+        }
+
+        .address-text {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 13px;
+            color: var(--text-color);
+            word-break: break-all;
+        }
+
+        .tabs {
+            display: flex;
+            background: var(--card-bg-color);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px var(--shadow-color);
+        }
+
+        .tab {
+            padding: 12px;
+            cursor: pointer;
+            color: var(--hint-color);
+            font-weight: 600;
+            flex: 1;
+            text-align: center;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            background: var(--button-color);
+            color: var(--button-text-color);
+        }
+
         .hidden { display: none; }
-        .address-text { font-family: monospace; font-size: 13px; }
+
+        /* Toast notification */
+        #toast-container {
+            position: fixed;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .toast {
+            padding: 14px 20px;
+            border-radius: 12px;
+            color: #fff;
+            font-weight: 500;
+            font-size: 15px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            animation: slideDown 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, fadeOut 0.3s ease 2.7s forwards;
+        }
+
+        .toast.success { background: #4caf50; }
+        .toast.error { background: #f44336; }
+
+        @keyframes slideDown {
+            from { transform: translateY(-100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
+        .btn-small {
+            padding: 8px 12px;
+            font-size: 13px;
+            width: auto;
+            margin: 0;
+            border-radius: 8px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 32px 16px;
+            color: var(--hint-color);
+            background: var(--card-bg-color);
+            border-radius: 16px;
+            border: 1px dashed var(--border-color);
+        }
     </style>
 </head>
 <body>
+    <div id="toast-container"></div>
+
     <div id="tabs-container" class="tabs hidden">
         <div id="tab-user" class="tab active" onclick="switchTab('user')">Мои адреса</div>
         <div id="tab-admin" class="tab" onclick="switchTab('admin')">Админ</div>
     </div>
 
-    <div class="status" id="status"></div>
-
     <div id="view-user">
-        <h3>➕ Добавить адрес</h3>
-        <input type="text" id="name" placeholder="Название группы (например: Мой кошелёк)">
-        <input type="text" id="address" placeholder="BTC адрес">
-        <button onclick="addAddress()">Добавить адрес</button>
-
         <h3>📂 Ваши адреса</h3>
-        <div id="user-list" class="list">Загрузка...</div>
+        <div id="user-list" class="list">
+            <div class="empty-state">Загрузка...</div>
+        </div>
+
+        <h3>➕ Добавить новый адрес</h3>
+        <div class="group" style="margin-top:0;">
+            <input type="text" id="name" placeholder="Название (напр.: Основной)">
+            <input type="text" id="address" placeholder="BTC адрес">
+            <button onclick="addAddress()">Добавить адрес</button>
+        </div>
     </div>
 
     <div id="view-admin" class="hidden">
         <h3>Управление пользователями</h3>
-        <div id="admin-list" class="list">Загрузка...</div>
+        <div id="admin-list" class="list">
+            <div class="empty-state">Загрузка...</div>
+        </div>
         
         <h3>➕ Добавить адрес пользователю</h3>
-        <input type="text" id="admin-uid" placeholder="ID пользователя">
-        <input type="text" id="admin-name" placeholder="Название группы">
-        <input type="text" id="admin-address" placeholder="BTC адрес">
-        <button onclick="adminAddAddress()">Добавить пользователю</button>
+        <div class="group" style="margin-top:0;">
+            <input type="text" id="admin-uid" placeholder="ID пользователя">
+            <input type="text" id="admin-name" placeholder="Название группы">
+            <input type="text" id="admin-address" placeholder="BTC адрес">
+            <button onclick="adminAddAddress()">Добавить пользователю</button>
+        </div>
     </div>
-
-    <button onclick="Telegram.WebApp.close()" style="background:var(--tg-theme-hint-color, #555); margin-top: 20px;">Закрыть Mini App</button>
 
     <script>
         const webApp = window.Telegram.WebApp;
@@ -63,12 +266,15 @@
 
         let stateData = null;
 
-        function showStatus(msg, isError = false) {
-            const status = document.getElementById('status');
-            status.textContent = msg;
-            status.className = 'status ' + (isError ? 'error' : 'success');
-            status.style.display = 'block';
-            setTimeout(() => { status.style.display = 'none'; }, 3000);
+        function showToast(msg, isError = false) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast ' + (isError ? 'error' : 'success');
+            toast.textContent = msg;
+            container.appendChild(toast);
+            setTimeout(() => {
+                if(container.contains(toast)) container.removeChild(toast);
+            }, 3000);
         }
 
         async function apiCall(action, payload = {}) {
@@ -83,7 +289,7 @@
                 await loadData();
                 return true;
             } catch (e) {
-                showStatus(e.message, true);
+                showToast(e.message, true);
                 return false;
             }
         }
@@ -104,8 +310,8 @@
                 renderUserView();
                 if (stateData.is_admin) renderAdminView();
             } catch (e) {
-                showStatus('Ошибка загрузки данных', true);
-                document.getElementById('user-list').innerHTML = 'Ошибка соединения с ботом.';
+                showToast('Ошибка загрузки данных', true);
+                document.getElementById('user-list').innerHTML = '<div class="empty-state">Ошибка соединения с ботом.</div>';
             }
         }
 
@@ -115,21 +321,28 @@
             const groups = stateData.user_data.groups || [];
             
             if (groups.length === 0) {
-                list.innerHTML = 'Список пуст.';
+                list.innerHTML = '<div class="empty-state">У вас пока нет добавленных адресов.<br>Добавьте первый ниже 👇</div>';
                 return;
             }
 
             groups.forEach(g => {
                 const gDiv = document.createElement('div');
                 gDiv.className = 'group';
-                gDiv.innerHTML = `<strong>${g.name}</strong> <button onclick="apiCall('delete_group', {gid: '${g.id}'})" class="red" style="padding:4px; font-size:12px; width:auto;">Удалить группу</button>`;
+                gDiv.innerHTML = `
+                    <div class="group-header">
+                        <strong>${g.name}</strong> 
+                        <button onclick="apiCall('delete_group', {gid: '${g.id}'})" class="red btn-small">Удалить</button>
+                    </div>
+                `;
                 
                 (g.addresses || []).forEach(a => {
                     const aDiv = document.createElement('div');
                     aDiv.className = 'address';
                     aDiv.innerHTML = `
-                        <span class="address-text">${a.addr}</span>
-                        <button onclick="apiCall('delete_address', {gid: '${g.id}', aid: '${a.id}'})" class="red" style="padding:4px; font-size:12px; width:auto; margin:0;">🗑</button>
+                        <div class="address-info">
+                            <span class="address-text">${a.addr}</span>
+                        </div>
+                        <button onclick="apiCall('delete_address', {gid: '${g.id}', aid: '${a.id}'})" class="red btn-small" style="font-size:16px; padding:6px 10px;">🗑</button>
                     `;
                     gDiv.appendChild(aDiv);
                 });
@@ -142,25 +355,35 @@
             list.innerHTML = '';
             const users = stateData.all_users || {};
             
+            if(Object.keys(users).length === 0) {
+                list.innerHTML = '<div class="empty-state">Пользователей не найдено.</div>';
+                return;
+            }
+            
             for (const [uid, udata] of Object.entries(users)) {
                 const uDiv = document.createElement('div');
                 uDiv.className = 'group';
                 const name = udata.first_name || udata.username || uid;
-                uDiv.innerHTML = `<strong>👤 ${name} (ID: ${uid})</strong>`;
+                uDiv.innerHTML = `
+                    <div class="group-header">
+                        <strong>👤 ${name}</strong>
+                        <span style="color:var(--hint-color); font-size:12px;">ID: ${uid}</span>
+                    </div>
+                `;
                 
                 (udata.groups || []).forEach(g => {
                     (g.addresses || []).forEach(a => {
                         const aDiv = document.createElement('div');
                         aDiv.className = 'address';
-                        const status = a.notify_disabled ? '❌ Выкл' : '✅ Вкл';
+                        const isOff = a.notify_disabled;
                         aDiv.innerHTML = `
-                            <div style="display:flex; flex-direction:column; gap:4px;">
-                                <small>${g.name}</small>
+                            <div class="address-info">
+                                <small style="color:var(--button-color); font-weight:bold;">${g.name}</small>
                                 <span class="address-text">${a.addr}</span>
                             </div>
-                            <div style="display:flex; flex-direction:column; gap:4px;">
-                                <button onclick="apiCall('admin_toggle_notify', {uid: '${uid}', gid: '${g.id}', aid: '${a.id}'})" style="padding:4px; font-size:12px; width:auto; margin:0; background:#555;">${status}</button>
-                                <button onclick="apiCall('admin_delete_address', {uid: '${uid}', gid: '${g.id}', aid: '${a.id}'})" class="red" style="padding:4px; font-size:12px; width:auto; margin:0;">🗑</button>
+                            <div style="display:flex; flex-direction:column; gap:6px;">
+                                <button onclick="apiCall('admin_toggle_notify', {uid: '${uid}', gid: '${g.id}', aid: '${a.id}'})" class="btn-small" style="background:${isOff?'#9e9e9e':'#4caf50'};">${isOff?'❌ Выкл':'✅ Вкл'}</button>
+                                <button onclick="apiCall('admin_delete_address', {uid: '${uid}', gid: '${g.id}', aid: '${a.id}'})" class="red btn-small">🗑 Удал</button>
                             </div>
                         `;
                         uDiv.appendChild(aDiv);
@@ -173,8 +396,12 @@
         async function addAddress() {
             const name = document.getElementById('name').value;
             const address = document.getElementById('address').value;
+            if(!name || !address) {
+                showToast('Заполните все поля!', true);
+                return;
+            }
             if (await apiCall('add_address', { group_name: name, address })) {
-                showStatus('✅ Адрес добавлен');
+                showToast('✅ Адрес успешно добавлен');
                 document.getElementById('address').value = '';
             }
         }
@@ -183,8 +410,12 @@
             const uid = document.getElementById('admin-uid').value;
             const name = document.getElementById('admin-name').value;
             const address = document.getElementById('admin-address').value;
+            if(!uid || !name || !address) {
+                showToast('Заполните все поля!', true);
+                return;
+            }
             if (await apiCall('admin_add_address', { uid, group_name: name, address })) {
-                showStatus('✅ Адрес добавлен пользователю');
+                showToast('✅ Адрес добавлен пользователю');
                 document.getElementById('admin-address').value = '';
             }
         }
