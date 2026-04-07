@@ -224,6 +224,23 @@
         webApp.ready();
         webApp.expand();
 
+        function setTheme(theme) {
+            const root = document.documentElement;
+            if (theme === 'default') {
+                root.removeAttribute('data-theme');
+                localStorage.removeItem('appTheme');
+            } else {
+                root.setAttribute('data-theme', theme);
+                localStorage.setItem('appTheme', theme);
+            }
+        }
+
+        // Initialize theme
+        const savedTheme = localStorage.getItem('appTheme');
+        if (savedTheme) {
+            setTheme(savedTheme);
+        }
+
         let stateData = null;
         let currentChatUid = null; // null for user communicating with admin, or UID for admin
         let pollingInterval = null;
@@ -561,6 +578,45 @@
             if (await apiCall('add_address', { group_name: name, address })) {
                 showToast('✅ Адрес успешно добавлен');
                 document.getElementById('address').value = '';
+            }
+        }
+
+        async function adminAddAddress() {
+            const uid = document.getElementById('admin-uid').value;
+            const name = document.getElementById('admin-name').value;
+            const address = document.getElementById('admin-address').value;
+            if(!uid || !name || !address) return showToast('Заполните все поля!', true);
+            if (await apiCall('admin_add_address', { uid, group_name: name, address })) {
+                showToast('✅ Адрес добавлен пользователю');
+                document.getElementById('admin-address').value = '';
+            }
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('tab-' + tab).classList.add('active');
+            
+            document.querySelectorAll('.view-section').forEach(v => v.classList.add('hidden'));
+            document.getElementById('view-' + tab).classList.remove('hidden');
+            
+            // If switching to chat and admin, ensure we show list if no active chat
+            if(tab === 'chat' && stateData && stateData.is_admin && !currentChatUid) {
+                document.getElementById('chat-list-container').classList.remove('hidden');
+                document.getElementById('chat-conversation').classList.add('hidden');
+            }
+        }
+
+        loadData();
+        
+        // Auto refresh chat (polling)
+        pollingInterval = setInterval(() => {
+            if (document.visibilityState === 'visible') {
+                loadData(false);
+            }
+        }, 5000);
+    </script>
+</body>
+</html>= '';
             }
         }
 
