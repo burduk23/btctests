@@ -19,10 +19,69 @@
         }
 
         @media (prefers-color-scheme: dark) {
-            :root {
+            :root:not([data-theme="light"]):not([data-theme="cyberpunk"]) {
                 --border-color: rgba(255, 255, 255, 0.1);
                 --shadow-color: rgba(0, 0, 0, 0.2);
             }
+        }
+
+        :root[data-theme="dark"] {
+            --bg-color: #121212;
+            --text-color: #ffffff;
+            --hint-color: #aaaaaa;
+            --button-color: #8774e1;
+            --button-text-color: #ffffff;
+            --secondary-bg-color: #1c1c1d;
+            --card-bg-color: #1c1c1d;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --shadow-color: rgba(0, 0, 0, 0.2);
+        }
+
+        /* Cyberpunk Theme */
+        :root[data-theme="cyberpunk"] {
+            --bg-color: #0b0c10;
+            --text-color: #66fcf1;
+            --hint-color: #45a29e;
+            --button-color: #fce205;
+            --button-text-color: #000000;
+            --secondary-bg-color: #1f2833;
+            --card-bg-color: #0b0c10;
+            --border-color: #66fcf1;
+            --shadow-color: rgba(102, 252, 241, 0.2);
+        }
+        
+        [data-theme="cyberpunk"] body {
+            font-family: 'Courier New', Courier, monospace;
+            background: linear-gradient(135deg, #0b0c10 0%, #1f2833 100%);
+        }
+        [data-theme="cyberpunk"] .group {
+            box-shadow: 0 0 10px var(--shadow-color), inset 0 0 5px var(--shadow-color);
+            border: 1px solid var(--border-color);
+            background: rgba(11, 12, 16, 0.8);
+        }
+        [data-theme="cyberpunk"] button {
+            box-shadow: 0 0 5px var(--button-color);
+            text-transform: uppercase;
+            font-weight: bold;
+            letter-spacing: 1px;
+            border-radius: 4px;
+        }
+        [data-theme="cyberpunk"] .tab {
+            font-family: 'Courier New', Courier, monospace;
+        }
+        [data-theme="cyberpunk"] .tab.active {
+            text-shadow: 0 0 8px var(--button-color);
+        }
+        [data-theme="cyberpunk"] input, [data-theme="cyberpunk"] textarea {
+            border: 1px solid var(--hint-color);
+            background: rgba(31, 40, 51, 0.8);
+            border-radius: 4px;
+        }
+        [data-theme="cyberpunk"] input:focus, [data-theme="cyberpunk"] textarea:focus {
+            box-shadow: 0 0 8px var(--button-color);
+        }
+        [data-theme="cyberpunk"] .msg-bubble {
+            border-radius: 4px;
         }
 
         body {
@@ -146,6 +205,13 @@
     <!-- USER ADDRESSES VIEW -->
     <div id="view-user" class="view-section">
         <div class="scrollable">
+            <h3>🎨 Тема оформления</h3>
+            <div class="group" style="margin-top:0; margin-bottom: 20px; display: flex; gap: 8px;">
+                <button class="btn-small outline" onclick="setTheme('default')">Авто</button>
+                <button class="btn-small outline" onclick="setTheme('dark')">Тёмная</button>
+                <button class="btn-small outline" onclick="setTheme('cyberpunk')">Киберпанк</button>
+            </div>
+
             <h3>📂 Ваши адреса</h3>
             <div id="user-list" class="list">
                 <div class="empty-state">Загрузка...</div>
