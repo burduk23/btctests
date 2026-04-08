@@ -1,4 +1,35 @@
-{ if(container.contains(toast)) container.removeChild(toast); }, 3000);
+        const webApp = window.Telegram.WebApp;
+        webApp.ready();
+        webApp.expand();
+
+        function setTheme(theme) {
+            const root = document.documentElement;
+            if (theme === 'default') {
+                root.removeAttribute('data-theme');
+                localStorage.removeItem('appTheme');
+            } else {
+                root.setAttribute('data-theme', theme);
+                localStorage.setItem('appTheme', theme);
+            }
+        }
+
+        // Initialize theme
+        const savedTheme = localStorage.getItem('appTheme');
+        if (savedTheme) {
+            setTheme(savedTheme);
+        }
+
+        let stateData = null;
+        let currentChatUid = null; // null for user communicating with admin, or UID for admin
+        let pollingInterval = null;
+
+        function showToast(msg, isError = false) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast ' + (isError ? 'error' : 'success');
+            toast.textContent = msg;
+            container.appendChild(toast);
+            setTimeout(() => { if(container.contains(toast)) container.removeChild(toast); }, 3000);
         }
 
         async function apiCall(action, payload = {}) {
