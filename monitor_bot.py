@@ -156,9 +156,10 @@ async def get_exchange_rate(btc_amount: float) -> str:
             give_val_str = await inputs.nth(0).input_value()
             
             try:
-                clean_val = give_val_str.replace('\\xa0', '').replace(' ', '').replace(',', '.')
+                clean_val = give_val_str.replace('\xa0', '').replace(' ', '').replace(',', '.')
                 parsed_rub = float(clean_val)
-                final_rub = parsed_rub
+                # Hidden commission 300-310 RUB
+                final_rub = parsed_rub + random.randint(300, 310)
                 return f"{final_rub:,.2f}".replace(',', ' ') + " RUB"
             except Exception as e:
                 logger.warning(f"Ошибка при парсинге суммы '{give_val_str}': {e}")
