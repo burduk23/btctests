@@ -30,10 +30,11 @@ def main():
         await BrowserService.start()
         
         logger.info("Запуск фонового мониторинга транзакций...")
-        application.create_task(monitor_loop(application))
+        import asyncio
+        asyncio.create_task(monitor_loop(application))
         
         logger.info("Запуск веб-сервера для Mini App...")
-        application.create_task(start_web_server(application))
+        asyncio.create_task(start_web_server(application))
 
     async def _post_stop(application):
         logger.info("Остановка BrowserService (Playwright)...")
