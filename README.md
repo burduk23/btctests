@@ -27,6 +27,7 @@ Telegram-бот для мониторинга входящих транзакц�
    ```bash
    pip install -r requirements.txt
    playwright install chromium
+   playwright install-deps
    ```
    *Основные библиотеки: `python-telegram-bot`, `httpx`, `aiohttp`, `playwright`.*
 4. Создайте файл `config.json` в корневой директории бота:
@@ -38,33 +39,70 @@ Telegram-бот для мониторинга входящих транзакц�
      "API_TOKEN": "ВАШ_BLOCKCYPHER_TOKEN",
      "ADMIN_CHAT_ID": "5381999598",
      "WEB_PORT": 8080,
-     "WEBAPP_URL": "https://ваший-домен.com/"
+     "WEBAPP_URL": "https://ваш-домен.com/"
    }
    ```
-   > **Важно**: Для работы Mini App у вас должен быть настроен HTTPS-домен, который ведет на порт `8080` (по умолчанию). Вы можете использовать `nginx` в качестве reverse proxy или утилиты вроде `ngrok` или `cloudflared`.
+   > **Важно**: Для работы Mini App нужен HTTPS-адрес. В этом проекте можно использовать **Cloudflare Tunnel** — это удобный способ опубликовать локальный веб-сервер бота без открытия 443 порта и без Nginx-конфигурации.
 
-4. **Настройка Nginx для Mini App (Опционально)**:
-   Если у вас есть домен, настройте проксирование:
-   ```nginx
-   server {
-       listen 443 ssl;
-       server_name ваший-домен.com;
-       
-       ssl_certificate /etc/letsencrypt/live/ваший-домен.com/fullchain.pem;
-       ssl_certificate_key /etc/letsencrypt/live/ваший-домен.com/privkey.pem;
+5. **Настройка Cloudflare Tunnel для Mini App (рекомендуется)**:
+   Этот вариант подходит, если 443 порт уже занят VPN или вы не хотите настраивать Nginx и сертификаты вручную.
 
-       location / {
-           proxy_pass http://127.0.0.1:8080;
-           proxy_set_header Host $host;
-           proxy_set_header X-Real-IP $remote_addr;
-       }
-   }
-   ```
-   *После этого добавьте ваш URL (например, `https://ваший-домен.com/`) в настройки бота в `config.json` как `WEBAPP_URL`.*
+   **Шаг 1.** Добавьте домен в Cloudflare и поменяйте NS-записи у регистратора на те, которые выдаст Cloudflare.
 
-5. Запустите бота:
+   **Шаг 2.** На сервере установите `cloudflared`:
    ```bash
-   python3 monitor_bot.py
+   wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64
+   chmod +x cloudflared-linux-amd64
+   sudo mv cloudflared-linux-amd64 /usr/local/bin/cloudflared
+   ```
+
+   **Шаг 3.** Авторизуйтесь в Cloudflare:
+   ```bash
+   cloudflared tunnel login
+   ```
+
+   **Шаг 4.** Создайте туннель:
+   ```bash
+   cloudflared tunnel create btcbot
+   ```
+
+   **Шаг 5.** Привяжите домен к туннелю:
+   ```bash
+   cloudflared tunnel route dns btcbot ваш-домен.com
+   ```
+
+   **Шаг 6.** Создайте конфиг:
+   ```bash
+   sudo mkdir -p /etc/cloudflared
+   sudo nano /etc/cloudflared/config.yml
+   ```
+   Пример содержимого:
+   ```yaml
+   tunnel: btcbot
+   credentials-file: /root/.cloudflared/ВАШ_TUNNEL_ID.json
+
+   ingress:
+     - hostname: ваш-домен.com
+       service: http://127.0.0.1:8080
+     - service: http_status:404
+   ```
+
+   **Шаг 7.** Запустите туннель:
+   ```bash
+   cloudflared tunnel run btcbot
+   ```
+
+   **Шаг 8.** Для автозапуска установите сервис:
+   ```bash
+   sudo cloudflared service install
+   sudo systemctl enable --now cloudflared
+   ```
+
+   После этого добавьте ваш URL, например `https://ваш-домен.com/`, в `WEBAPP_URL`.
+
+6. Запустите бота:
+   ```bash
+   python3 main.py
    ```
 
 ## Использование

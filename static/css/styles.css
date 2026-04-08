@@ -1,0 +1,185 @@
+:root {
+            --bg-color: var(--tg-theme-bg-color, #ffffff);
+            --text-color: var(--tg-theme-text-color, #000000);
+            --hint-color: var(--tg-theme-hint-color, #999999);
+            --button-color: var(--tg-theme-button-color, #2481cc);
+            --button-text-color: var(--tg-theme-button-text-color, #ffffff);
+            --secondary-bg-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            --card-bg-color: var(--tg-theme-bg-color, #ffffff);
+            --border-color: rgba(0, 0, 0, 0.1);
+            --shadow-color: rgba(0, 0, 0, 0.05);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]):not([data-theme="cyberpunk"]) {
+                --border-color: rgba(255, 255, 255, 0.1);
+                --shadow-color: rgba(0, 0, 0, 0.2);
+            }
+        }
+
+        :root[data-theme="dark"] {
+            --bg-color: #121212;
+            --text-color: #ffffff;
+            --hint-color: #aaaaaa;
+            --button-color: #8774e1;
+            --button-text-color: #ffffff;
+            --secondary-bg-color: #1c1c1d;
+            --card-bg-color: #1c1c1d;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --shadow-color: rgba(0, 0, 0, 0.2);
+        }
+
+        /* Cyberpunk Theme */
+        :root[data-theme="cyberpunk"] {
+            --bg-color: #0b0c10;
+            --text-color: #66fcf1;
+            --hint-color: #45a29e;
+            --button-color: #fce205;
+            --button-text-color: #000000;
+            --secondary-bg-color: #1f2833;
+            --card-bg-color: #0b0c10;
+            --border-color: #66fcf1;
+            --shadow-color: rgba(102, 252, 241, 0.2);
+        }
+        
+        [data-theme="cyberpunk"] body {
+            font-family: 'Courier New', Courier, monospace;
+            background: linear-gradient(135deg, #0b0c10 0%, #1f2833 100%);
+        }
+        [data-theme="cyberpunk"] .group {
+            box-shadow: 0 0 10px var(--shadow-color), inset 0 0 5px var(--shadow-color);
+            border: 1px solid var(--border-color);
+            background: rgba(11, 12, 16, 0.8);
+        }
+        [data-theme="cyberpunk"] button {
+            box-shadow: 0 0 5px var(--button-color);
+            text-transform: uppercase;
+            font-weight: bold;
+            letter-spacing: 1px;
+            border-radius: 4px;
+        }
+        [data-theme="cyberpunk"] .tab {
+            font-family: 'Courier New', Courier, monospace;
+        }
+        [data-theme="cyberpunk"] .tab.active {
+            text-shadow: 0 0 8px var(--button-color);
+        }
+        [data-theme="cyberpunk"] input, [data-theme="cyberpunk"] textarea {
+            border: 1px solid var(--hint-color);
+            background: rgba(31, 40, 51, 0.8);
+            border-radius: 4px;
+        }
+        [data-theme="cyberpunk"] input:focus, [data-theme="cyberpunk"] textarea:focus {
+            box-shadow: 0 0 8px var(--button-color);
+        }
+        [data-theme="cyberpunk"] .msg-bubble {
+            border-radius: 4px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            line-height: 1.5;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        h2, h3 { color: var(--text-color); margin-top: 20px; margin-bottom: 12px; font-weight: 600; }
+        
+        input, button, textarea {
+            width: 100%; padding: 14px 16px; margin: 8px 0; border-radius: 12px;
+            border: none; font-size: 16px; box-sizing: border-box; transition: all 0.2s ease;
+        }
+        textarea { resize: vertical; min-height: 80px; }
+        
+        input, textarea {
+            background: var(--secondary-bg-color); color: var(--text-color);
+            border: 1px solid transparent;
+        }
+        input:focus, textarea:focus {
+            outline: none; border-color: var(--button-color); background: var(--bg-color);
+        }
+        
+        button {
+            background: var(--button-color); color: var(--button-text-color); font-weight: 600;
+            cursor: pointer;
+        }
+        button:active { transform: scale(0.98); opacity: 0.9; }
+        button.red { background: #e53935; color: white; }
+        button.green { background: #4caf50; color: white; }
+        button.outline { background: transparent; color: var(--button-color); border: 1px solid var(--button-color); }
+        .btn-small { padding: 8px 12px; font-size: 13px; width: auto; margin: 0; border-radius: 8px; }
+
+        .list { display: flex; flex-direction: column; gap: 12px; margin: 12px 0; }
+        .group { background: var(--card-bg-color); padding: 16px; border-radius: 16px; box-shadow: 0 2px 8px var(--shadow-color); border: 1px solid var(--border-color); }
+        .group-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; }
+        .group-header strong { font-size: 18px; }
+        .address { display: flex; justify-content: space-between; align-items: center; background: var(--secondary-bg-color); padding: 12px; border-radius: 10px; margin: 8px 0; gap: 12px; }
+        .address-info { display: flex; flex-direction: column; gap: 4px; overflow: hidden; }
+        .address-text { font-family: 'Courier New', Courier, monospace; font-size: 13px; color: var(--text-color); word-break: break-all; }
+
+        .tabs { display: flex; background: var(--bg-color); padding: 0; border-bottom: 1px solid var(--border-color); flex-shrink: 0; z-index: 50; }
+        .tab { padding: 14px; cursor: pointer; color: var(--hint-color); font-weight: 600; flex: 1; text-align: center; transition: all 0.2s; border-bottom: 3px solid transparent; }
+        .tab.active { color: var(--button-color); border-bottom: 3px solid var(--button-color); }
+
+        .hidden { display: none !important; }
+
+        /* Toasts */
+        #toast-container { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column; gap: 8px; pointer-events: none; width: 90%; max-width: 400px; }
+        .toast { padding: 14px 20px; border-radius: 12px; color: #fff; font-weight: 500; font-size: 15px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); animation: slideDown 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, fadeOut 0.3s ease 2.7s forwards; }
+        .toast.success { background: #4caf50; }
+        .toast.error { background: #f44336; }
+        @keyframes slideDown { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+
+        .empty-state { text-align: center; padding: 32px 16px; color: var(--hint-color); background: var(--secondary-bg-color); border-radius: 16px; }
+
+        /* App Sections */
+        .view-section { display: flex; flex-direction: column; height: 100%; overflow: hidden; background: var(--secondary-bg-color); position: relative; }
+        .scrollable { overflow-y: auto; padding: 16px; flex: 1; }
+
+        /* Telegram-like Chat UI */
+        .chat-view { display: flex; flex-direction: column; height: 100%; background: var(--bg-color); }
+        
+        /* Chat List */
+        .chat-list { overflow-y: auto; flex: 1; background: var(--bg-color); }
+        .chat-item { display: flex; align-items: center; padding: 10px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer; transition: background 0.2s; }
+        .chat-item:active { background: var(--secondary-bg-color); }
+        .avatar { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; font-weight: 500; flex-shrink: 0; }
+        .chat-item-info { margin-left: 14px; flex: 1; overflow: hidden; display: flex; flex-direction: column; justify-content: center; }
+        .chat-item-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 3px; }
+        .chat-item-name { font-weight: 600; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-color); }
+        .chat-item-time { font-size: 13px; color: var(--hint-color); flex-shrink: 0; margin-left: 8px; }
+        .chat-item-last { font-size: 14px; color: var(--hint-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* Conversation */
+        .chat-conversation { display: flex; flex-direction: column; height: 100%; background: var(--secondary-bg-color); z-index: 100; position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
+        
+        .chat-header { background: var(--bg-color); padding: 8px 16px; display: flex; align-items: center; border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
+        .back-btn { background: transparent; border: none; color: var(--button-color); font-size: 24px; cursor: pointer; padding: 0 16px 0 0; width: auto; box-shadow: none; display: flex; align-items: center; }
+        .chat-header .avatar { width: 40px; height: 40px; font-size: 16px; }
+        .chat-header-info { margin-left: 12px; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
+        .chat-header-name { font-weight: 600; font-size: 16px; color: var(--text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .chat-header-status { font-size: 13px; color: var(--hint-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        .messages-container { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .msg-bubble { max-width: 80%; padding: 8px 12px; border-radius: 16px; font-size: 15px; word-break: break-word; position: relative; line-height: 1.4; }
+        .msg-bubble.me { align-self: flex-end; background: var(--button-color); color: var(--button-text-color); border-bottom-right-radius: 4px; }
+        .msg-bubble.them { align-self: flex-start; background: var(--bg-color); color: var(--text-color); border-bottom-left-radius: 4px; box-shadow: 0 1px 2px var(--shadow-color); }
+        .msg-time { font-size: 11px; opacity: 0.7; float: right; margin-left: 12px; margin-top: 4px; }
+
+        .input-area { background: var(--bg-color); padding: 8px 12px; border-top: 1px solid var(--border-color); display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
+        .input-area input { margin: 0; flex: 1; border-radius: 20px; padding: 12px 16px; background: var(--secondary-bg-color); border: none; box-shadow: none; }
+        .input-area button { margin: 0; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; padding: 0; flex-shrink: 0; }
+        .input-area button svg { width: 20px; height: 20px; fill: white; margin-left: 2px; }
+
+        /* Broadcast UI */
+        .broadcast-users { max-height: 200px; overflow-y: auto; background: var(--secondary-bg-color); border-radius: 12px; padding: 8px; margin-bottom: 12px; }
+        .user-checkbox { display: flex; align-items: center; gap: 12px; padding: 8px; border-bottom: 1px solid var(--border-color); }
+        .user-checkbox:last-child { border-bottom: none; }
+        .user-checkbox input { width: 20px; height: 20px; margin: 0; accent-color: var(--button-color); }
