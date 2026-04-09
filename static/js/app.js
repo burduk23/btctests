@@ -331,7 +331,7 @@
                     
                     let contentHtml = '';
                     if (m.image) {
-                        contentHtml += `<img src="${m.image}" onclick="window.open('${m.image}', '_blank')">`;
+                        contentHtml += `<img src="${m.image}" onclick="openFullImage('${m.image}')">`;
                     }
                     contentHtml += `${m.text}<span class="msg-time">${formatTime(m.ts)}${ticksHtml}</span>`;
                     
@@ -521,6 +521,17 @@
                 }
                 refreshConversation();
             }
+        }
+
+        function openFullImage(src) {
+            const modal = document.getElementById('image-modal');
+            const img = document.getElementById('modal-img');
+            img.src = src;
+            modal.classList.remove('hidden');
+        }
+
+        function closeFullImage() {
+            document.getElementById('image-modal').classList.add('hidden');
         }
 
         loadData();

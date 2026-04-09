@@ -55,7 +55,10 @@ async def web_api_get(request):
             response["is_main_admin"] = True
             response["admins"] = state.get("admins", [])
             
-        return web.json_response(response)
+        resp = web.json_response(response)
+        # Устанавливаем защищенную сессию для доступа к медиафайлам
+        resp.set_cookie('tg_session', uid, httponly=True, samesite='Lax', secure=True if config.WEBAPP_URL.startswith('https') else False)
+        return resp
     except Exception as e:
         logger.error(f"Error in web_api_get: {e}")
         return web.json_response({"error": "Server error"}, status=500)
