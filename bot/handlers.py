@@ -228,14 +228,19 @@ async def text_router(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         msg_text = text
         sent_count = 0
         markup = InlineKeyboardMarkup([[InlineKeyboardButton("💬 Ответить", callback_data="reply_to_admin")]])
+        import time
         
         for uid in selected:
+            target_user = state.setdefault("users", {}).setdefault(uid, {"groups": []}) # type: ignore
+            msg_obj = {"id": str(time.time()), "from": "admin", "text": msg_text, "ts": int(time.time()), "read": False}
+            target_user.setdefault("messages", []).append(msg_obj) # type: ignore
             try:
                 await ctx.bot.send_message(chat_id=int(uid), text=msg_text, reply_markup=markup)
                 sent_count += 1
             except Exception as e:
                 logger.error(f"Не удалось отправить рассылку {uid}: {e}")
                 
+        save_state(state)
         ctx.chat_data.pop("broadcast_targets", None) # type: ignore
         ctx.chat_data.pop("flow", None) # type: ignore
         await remove_prompt(ctx, chat_id)
@@ -244,6 +249,12 @@ async def text_router(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         return
 
     if flow.get("action") == "user_reply_admin":
+        import time
+        udata = state.setdefault("users", {}).setdefault(user_id, {"groups": []}) # type: ignore
+        msg_obj = {"id": str(time.time()), "from": "user", "text": text, "ts": int(time.time()), "read": False}
+        udata.setdefault("messages", []).append(msg_obj) # type: ignore
+        save_state(state)
+
         user_name = user.first_name or user.username or "Пользователь"
         msg_text = f"📩 Ответ от {user_name} ({user_id}):\n\n{text}"
         
