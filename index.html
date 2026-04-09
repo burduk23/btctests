@@ -59,10 +59,18 @@
                     <div class="chat-header-status" id="chat-header-status">...</div>
                 </div>
             </div>
-            <div class="messages-container" id="chat-messages">
+            <div id="chat-messages" class="messages-container">
                 <!-- Messages -->
             </div>
+            <div id="chat-image-preview" class="image-preview hidden">
+                <img id="preview-img" src="" alt="Preview">
+                <button class="remove-preview" onclick="clearFileSelection()">×</button>
+            </div>
             <div class="input-area">
+                <input type="file" id="chat-file-input" accept="image/*" hidden onchange="handleFileSelect(event)">
+                <button class="attach-btn" onclick="document.getElementById('chat-file-input').click()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.82-2.82l8.49-8.48"/></svg>
+                </button>
                 <input type="text" id="chat-input" placeholder="Сообщение..." onkeypress="handleChatKeyPress(event)">
                 <button onclick="sendChatMessage()">
                     <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>

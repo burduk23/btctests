@@ -15,6 +15,9 @@ async def start_web_server(app):
     # Раздача статики
     webapp.router.add_static('/static/', path=BASE_DIR / 'static', name='static')
 
+    # Создание папки для загрузок если её нет
+    (BASE_DIR / 'static' / 'uploads').mkdir(parents=True, exist_ok=True)
+
     runner = web.AppRunner(webapp)
     await runner.setup()
     port = int(config.WEB_PORT)

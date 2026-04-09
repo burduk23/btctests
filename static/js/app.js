@@ -22,6 +22,7 @@
         let stateData = null;
         let currentChatUid = null; // null for user communicating with admin, or UID for admin
         let pollingInterval = null;
+        let selectedFileBase64 = null;
 
         function showToast(msg, isError = false) {
             const container = document.getElementById('toast-container');
@@ -170,6 +171,29 @@
         }
 
         // --- Chat Functions ---
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (file.size > 5 * 1024 * 1024) {
+                showToast('Файл слишком большой (макс. 5МБ)', true);
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                selectedFileBase64 = event.target.result;
+                document.getElementById('preview-img').src = selectedFileBase64;
+                document.getElementById('chat-image-preview').classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function clearFileSelection() {
+            selectedFileBase64 = null;
+            document.getElementById('chat-file-input').value = '';
+            document.getElementById('chat-image-preview').classList.add('hidden');
+        }
+
         function renderAdminChatList() {
             const container = document.getElementById('chat-list-container');
             container.innerHTML = '';
@@ -258,17 +282,22 @@
             }
             
             const container = document.getElementById('chat-messages');
+            const chatView = document.getElementById('view-chat');
+            const isChatActive = !chatView.classList.contains('hidden');
             
             // Check if we need to auto-scroll (only if we were already at bottom or if it's first render)
             const isAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 50;
             
             let hasUnread = false;
-            if (stateData.is_admin) {
-                hasUnread = messages.some(m => m.from === 'user' && !m.read);
-                if (hasUnread) messages.forEach(m => { if (m.from === 'user') m.read = true; });
-            } else {
-                hasUnread = messages.some(m => m.from === 'admin' && !m.read);
-                if (hasUnread) messages.forEach(m => { if (m.from === 'admin') m.read = true; });
+            // Only mark as read if chat view is active
+            if (isChatActive) {
+                if (stateData.is_admin) {
+                    hasUnread = messages.some(m => m.from === 'user' && !m.read);
+                    if (hasUnread) messages.forEach(m => { if (m.from === 'user') m.read = true; });
+                } else {
+                    hasUnread = messages.some(m => m.from === 'admin' && !m.read);
+                    if (hasUnread) messages.forEach(m => { if (m.from === 'admin') m.read = true; });
+                }
             }
             
             if (hasUnread) {
@@ -299,7 +328,14 @@
                     const b = document.createElement('div');
                     b.className = `msg-bubble ${isMe ? 'me' : 'them'}`;
                     const ticksHtml = isMe ? `<span class="msg-ticks">${m.read ? '<svg viewBox="0 0 24 24"><path d="M18 6L7 17l-5-5M22 10l-6 6"/></svg>' : '<svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>'}</span>` : '';
-                    b.innerHTML = `${m.text}<span class="msg-time">${formatTime(m.ts)}${ticksHtml}</span>`;
+                    
+                    let contentHtml = '';
+                    if (m.image) {
+                        contentHtml += `<img src="${m.image}" onclick="window.open('${m.image}', '_blank')">`;
+                    }
+                    contentHtml += `${m.text}<span class="msg-time">${formatTime(m.ts)}${ticksHtml}</span>`;
+                    
+                    b.innerHTML = contentHtml;
                     container.appendChild(b);
                 });
             }
@@ -318,16 +354,26 @@
         async function sendChatMessage() {
             const input = document.getElementById('chat-input');
             const text = input.value.trim();
-            if(!text) return;
+            const image = selectedFileBase64;
+            
+            if(!text && !image) return;
             
             input.value = '';
+            const sentImage = image; // Copy for optimistic render
+            clearFileSelection();
             
             // Optimistic render
             const container = document.getElementById('chat-messages');
             const b = document.createElement('div');
             b.className = `msg-bubble me`;
             const ticks = `<span class="msg-ticks"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></span>`;
-            b.innerHTML = `${text}<span class="msg-time">${formatTime(Math.floor(Date.now()/1000))}${ticks}</span>`;
+            
+            let optimisticHtml = '';
+            if (sentImage) {
+                optimisticHtml += `<img src="${sentImage}">`;
+            }
+            optimisticHtml += `${text}<span class="msg-time">${formatTime(Math.floor(Date.now()/1000))}${ticks}</span>`;
+            b.innerHTML = optimisticHtml;
             
             // Remove empty state if present
             if(container.children.length === 1 && container.children[0].innerText.includes('Здесь будет')) {
@@ -336,7 +382,7 @@
             container.appendChild(b);
             container.scrollTop = container.scrollHeight;
 
-            await apiCall('send_chat_message', { text, uid: currentChatUid });
+            await apiCall('send_chat_message', { text, image: sentImage, uid: currentChatUid });
         }
 
         // --- Admin Functions ---
@@ -468,9 +514,12 @@
             document.getElementById('view-' + tab).classList.remove('hidden');
             
             // If switching to chat and admin, ensure we show list if no active chat
-            if(tab === 'chat' && stateData && stateData.is_admin && !currentChatUid) {
-                document.getElementById('chat-list-container').classList.remove('hidden');
-                document.getElementById('chat-conversation').classList.add('hidden');
+            if(tab === 'chat') {
+                if (stateData && stateData.is_admin && !currentChatUid) {
+                    document.getElementById('chat-list-container').classList.remove('hidden');
+                    document.getElementById('chat-conversation').classList.add('hidden');
+                }
+                refreshConversation();
             }
         }
 

@@ -4,6 +4,7 @@ import json
 import logging
 import hmac
 import hashlib
+import base64
 from urllib.parse import parse_qsl
 from pathlib import Path
 from aiohttp import web
@@ -168,7 +169,9 @@ async def web_api_action(request):
 
         elif action == "send_chat_message":
             text = payload.get("text", "").strip()
-            if not text:
+            image_b64 = payload.get("image")
+            
+            if not text and not image_b64:
                 return web.json_response({"error": "Invalid data"}, status=400)
             
             bot = request.app['bot_app'].bot
@@ -177,18 +180,46 @@ async def web_api_action(request):
             
             sender_role = "admin" if is_admin and payload.get("uid") else "user"
             msg_obj = {"id": secrets.token_hex(4), "from": sender_role, "text": text, "ts": int(time.time())}
+            
+            # Handle image
+            image_path = None
+            if image_b64 and "," in image_b64:
+                try:
+                    header, data = image_b64.split(",", 1)
+                    ext = "jpg"
+                    if "png" in header: ext = "png"
+                    elif "gif" in header: ext = "gif"
+                    
+                    filename = f"{secrets.token_hex(8)}.{ext}"
+                    filepath = BASE_DIR / "static" / "uploads" / filename
+                    with open(filepath, "wb") as f:
+                        f.write(base64.b64decode(data))
+                    
+                    msg_obj["image"] = f"/static/uploads/{filename}"
+                    image_path = filepath
+                except Exception as e:
+                    logger.error(f"Error saving image: {e}")
+
             target_user.setdefault("messages", []).append(msg_obj)
             save_state(state)
             
             try:
                 if sender_role == "admin":
-                    await bot.send_message(chat_id=int(target_uid), text=f"📩 Сообщение от администратора:\n\n{text}")
+                    if image_path:
+                        await bot.send_photo(chat_id=int(target_uid), photo=open(image_path, 'rb'), caption=f"📩 Сообщение от администратора:\n\n{text}" if text else "📩 Изображение от администратора")
+                    else:
+                        await bot.send_message(chat_id=int(target_uid), text=f"📩 Сообщение от администратора:\n\n{text}")
                 else:
                     all_admins = get_all_admins(state)
                     user_name = user.get("first_name") or user.get("username") or uid
+                    notification_text = f"📩 Новое сообщение в Mini App от {user_name} ({uid}):\n\n{text}" if text else f"📩 Новое изображение в Mini App от {user_name} ({uid})"
+                    
                     for admin_id in all_admins:
                         try:
-                            await bot.send_message(chat_id=int(admin_id), text=f"📩 Новое сообщение в Mini App от {user_name} ({uid}):\n\n{text}")
+                            if image_path:
+                                await bot.send_photo(chat_id=int(admin_id), photo=open(image_path, 'rb'), caption=notification_text)
+                            else:
+                                await bot.send_message(chat_id=int(admin_id), text=notification_text)
                         except Exception as e:
                             logger.error(f"Error sending chat notification to admin {admin_id}: {e}")
             except Exception as e:
