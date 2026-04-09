@@ -215,6 +215,21 @@ async def web_api_action(request):
                 save_state(state)
             return web.json_response({"success": True})
             
+        elif action == "mark_chat_read":
+            target_uid = payload.get("uid")
+            if is_admin and target_uid:
+                target_user = state.setdefault("users", {}).setdefault(str(target_uid), {"groups": []}) # type: ignore
+                for msg in target_user.get("messages", []):
+                    if msg.get("from") == "user":
+                        msg["read"] = True
+                save_state(state)
+            elif not is_admin:
+                for msg in user_data.get("messages", []):
+                    if msg.get("from") == "admin":
+                        msg["read"] = True
+                save_state(state)
+            return web.json_response({"success": True})
+            
         return web.json_response({"error": "Unknown action"}, status=400)
     except Exception as e:
         logger.error(f"Error in web_api_action: {e}")

@@ -82,8 +82,38 @@
                 } else {
                     refreshConversation();
                 }
+                
+                updateBadges();
             } catch (e) {
                 if(showError) showToast('Ошибка загрузки данных', true);
+            }
+        }
+
+        function updateBadges() {
+            if (!stateData) return;
+            
+            let totalUnread = 0;
+            
+            if (stateData.is_admin) {
+                const users = stateData.all_users || {};
+                for (const [uid, udata] of Object.entries(users)) {
+                    const msgs = udata.messages || [];
+                    const unread = msgs.filter(m => m.from === 'user' && !m.read).length;
+                    totalUnread += unread;
+                }
+            } else {
+                const msgs = stateData.user_data.messages || [];
+                totalUnread = msgs.filter(m => m.from === 'admin' && !m.read).length;
+            }
+            
+            const badge = document.getElementById('chat-tab-badge');
+            if (badge) {
+                if (totalUnread > 0) {
+                    badge.textContent = totalUnread > 99 ? '99+' : totalUnread;
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
             }
         }
 
@@ -172,11 +202,14 @@
                 const timeStr = chat.lastTs ? formatDate(chat.lastTs) : '';
                 const lastText = chat.lastMsg ? (chat.lastMsg.from === 'admin' ? 'Вы: ' : '') + chat.lastMsg.text : 'Нет сообщений';
                 
+                const unreadCount = chat.msgs.filter(m => m.from === 'user' && !m.read).length;
+                const unreadBadgeHtml = unreadCount > 0 ? `<span class="chat-item-badge">${unreadCount > 99 ? '99+' : unreadCount}</span>` : '';
+                
                 item.innerHTML = `
                     <div class="avatar" style="background: ${color};">${initials}</div>
                     <div class="chat-item-info">
                         <div class="chat-item-header">
-                            <div class="chat-item-name">${chat.name}</div>
+                            <div class="chat-item-name" style="display:flex; align-items:center;">${chat.name}${unreadBadgeHtml}</div>
                             <div class="chat-item-time">${timeStr}</div>
                         </div>
                         <div class="chat-item-last">${lastText}</div>
@@ -229,6 +262,24 @@
             // Check if we need to auto-scroll (only if we were already at bottom or if it's first render)
             const isAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 50;
             
+            let hasUnread = false;
+            if (stateData.is_admin) {
+                hasUnread = messages.some(m => m.from === 'user' && !m.read);
+                if (hasUnread) messages.forEach(m => { if (m.from === 'user') m.read = true; });
+            } else {
+                hasUnread = messages.some(m => m.from === 'admin' && !m.read);
+                if (hasUnread) messages.forEach(m => { if (m.from === 'admin') m.read = true; });
+            }
+            
+            if (hasUnread) {
+                fetch('/api/action', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ initData: webApp.initData, action: 'mark_chat_read', payload: { uid: currentChatUid } })
+                }).then(() => updateBadges());
+                updateBadges();
+            }
+
             container.innerHTML = '';
             if(messages.length === 0) {
                 container.innerHTML = '<div style="text-align:center; color:var(--hint-color); margin-top:auto; margin-bottom:auto;">Здесь будет история сообщений.</div>';
