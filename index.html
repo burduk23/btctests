@@ -96,6 +96,18 @@
                 <input type="text" id="admin-address" placeholder="BTC адрес">
                 <button onclick="adminAddAddress()">Добавить пользователю</button>
             </div>
+
+            <!-- MANAGE ADMINS SECTION (Only for main admin) -->
+            <div id="admin-management-section" class="hidden">
+                <h3>👥 Управление администраторами</h3>
+                <div id="admins-list" class="list">
+                    <!-- Admins list goes here -->
+                </div>
+                <div class="group" style="margin-top:0;">
+                    <input type="text" id="new-admin-uid" placeholder="ID нового администратора (только цифры)">
+                    <button onclick="adminAddAdmin()" class="btn-small">Добавить администратора</button>
+                </div>
+            </div>
         </div>
     </div>
 

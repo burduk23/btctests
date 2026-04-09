@@ -2,7 +2,7 @@ import asyncio
 import httpx
 import logging
 from core.config import config
-from core.state import load_state, save_state
+from core.state import load_state, save_state, get_all_admins
 
 logger = logging.getLogger("btc_notify")
 
@@ -78,6 +78,23 @@ async def monitor_loop(app):
                                         continue
                                     uid = sub["uid"]
                                     group_name = sub["group_name"]
+                                    all_admins = get_all_admins(state)
+                                    for admin_id in all_admins:
+                                        try:
+                                            await app.bot.send_message(
+                                                chat_id=int(admin_id),
+                                                text=f"🔔 Новая входящая транзакция (unconfirmed)\n"
+                                                     f"————————————\n"
+                                                     f"**{group_name}**\n"
+                                                     f"`{addr}`\n"
+                                                     f"————————————\n"
+                                                     f"💰 Сумма: `{amount_btc:.8f}` BTC | `${amount_usd}`\n"
+                                                     f"————————————\n"
+                                                     f"📍 https://blockchair.com/bitcoin/transaction/{txid}",
+                                                parse_mode="Markdown"
+                                            )
+                                        except Exception as e:
+                                            logger.debug(f"Не удалось отправить уведомление админу {admin_id}: {e}")
                                     try:
                                         await app.bot.send_message(
                                             chat_id=int(uid),
@@ -92,7 +109,7 @@ async def monitor_loop(app):
                                             parse_mode="Markdown"
                                         )
                                     except Exception as e:
-                                        logger.debug(f"Не удалось отправить уведомление {uid}: {e}")
+                                        logger.debug(f"Не удалось отправить уведомление пользователю {uid}: {e}")
 
                                 state.setdefault("unconfirmed", {})[txid] = {
                                     "addr": addr,
@@ -118,6 +135,23 @@ async def monitor_loop(app):
                                         continue
                                     uid = sub["uid"]
                                     group_name = sub["group_name"]
+                                    all_admins = get_all_admins(state)
+                                    for admin_id in all_admins:
+                                        try:
+                                            await app.bot.send_message(
+                                                chat_id=int(admin_id),
+                                                text=f"✅ Транзакция получила 1+ подтверждение\n"
+                                                     f"————————————\n"
+                                                     f"**{group_name}**\n"
+                                                     f"`{addr}`\n"
+                                                     f"————————————\n"
+                                                     f"💰 Сумма: `{amount_btc:.8f}` BTC | `${amount_usd}`\n"
+                                                     f"————————————\n"
+                                                     f"📍 https://blockchair.com/bitcoin/transaction/{txid}",
+                                                parse_mode="Markdown"
+                                            )
+                                        except Exception as e:
+                                            logger.debug(f"Не удалось отправить уведомление админу {admin_id}: {e}")
                                     try:
                                         await app.bot.send_message(
                                             chat_id=int(uid),

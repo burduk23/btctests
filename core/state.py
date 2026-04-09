@@ -30,16 +30,17 @@ class StateData(TypedDict):
     users: Dict[str, UserData]
     unconfirmed: Dict[str, UnconfirmedTx]
     notified_confirmed: Dict[str, bool]
+    admins: List[str]
 
 def load_state() -> StateData:
-    default_state: StateData = {"users": {}, "unconfirmed": {}, "notified_confirmed": {}}
+    default_state: StateData = {"users": {}, "unconfirmed": {}, "notified_confirmed": {}, "admins": []}
     if not STATE_FILE.exists():
         return default_state
     try:
         data = json.loads(STATE_FILE.read_text())
         if "groups" in data and "users" not in data:
             admin_id = str(config.ADMIN_CHAT_ID)
-            new_state = {"users": {}, "unconfirmed": data.get("unconfirmed", {}), "notified_confirmed": data.get("notified_confirmed", {})}
+            new_state = {"users": {}, "unconfirmed": data.get("unconfirmed", {}), "notified_confirmed": data.get("notified_confirmed", {}), "admins": []}
             if admin_id:
                 new_state["users"][admin_id] = {"groups": data.get("groups", [])}
             logger.info(f"Выполнена миграция базы данных для админа {admin_id}")
@@ -59,3 +60,16 @@ def save_state(state: StateData):
         STATE_FILE.write_text(json.dumps(state, indent=2, ensure_ascii=False))
     except Exception as e:
         logger.error(f"Ошибка при сохранении state.json: {e}")
+
+def is_main_admin(uid: str) -> bool:
+    return uid == str(config.ADMIN_CHAT_ID)
+
+def get_all_admins(state: StateData) -> List[str]:
+    main_admin = str(config.ADMIN_CHAT_ID)
+    admins = state.get("admins", [])
+    if main_admin not in admins:
+        return [main_admin] + admins
+    return admins
+
+def is_admin(uid: str, state: StateData) -> bool:
+    return uid in get_all_admins(state)

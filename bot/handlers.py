@@ -1,9 +1,9 @@
 import logging
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes
-from core.state import load_state, save_state
+from core.state import load_state, save_state, get_all_admins, is_admin, is_main_admin
 from core.config import config
-from bot.markups import main_menu_markup, cancel_markup, group_view_markup, admin_user_markup
+from bot.markups import main_menu_markup, cancel_markup, group_view_markup, admin_user_markup, admin_manage_admins_markup
 from services.address import mk_group, mk_address, find_group, find_address
 from services.exchange import BrowserService
 
@@ -71,8 +71,6 @@ async def text_router(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         return
 
     text = update.message.text.strip() # type: ignore
-
-    admin_id_cfg = str(config.ADMIN_CHAT_ID)
 
     if flow.get("action") == "exchange_wait_amount":
         text_val = text.replace(',', '.')
@@ -190,7 +188,7 @@ async def text_router(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         await update_menu(ctx, chat_id, body, group_view_markup(group)) # type: ignore
         return
 
-    if flow.get("action") == "admin_add_name" and user_id == admin_id_cfg:
+    if flow.get("action") == "admin_add_name" and is_admin(user_id, state):
         target_uid = flow.get("target_uid")
         name = text
         await remove_prompt(ctx, chat_id)
@@ -198,7 +196,7 @@ async def text_router(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         ctx.chat_data["flow"] = {"action": "admin_add_val", "target_uid": target_uid, "name": name, "prompt_id": prompt.message_id} # type: ignore
         return
 
-    if flow.get("action") == "admin_add_val" and user_id == admin_id_cfg:
+    if flow.get("action") == "admin_add_val" and is_admin(user_id, state):
         target_uid = flow.get("target_uid")
         name = flow.get("name")
         addr = text
@@ -220,7 +218,7 @@ async def text_router(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         await update_menu(ctx, chat_id, f"Пользователь: {target_uid}\n\nВыберите адрес для управления:", admin_user_markup(target_uid, target_user)) # type: ignore
         return
 
-    if flow.get("action") == "admin_broadcast_text" and user_id == admin_id_cfg:
+    if flow.get("action") == "admin_broadcast_text" and is_admin(user_id, state):
         selected = ctx.chat_data.get("broadcast_targets", set()) # type: ignore
         if not selected:
             ctx.chat_data.pop("flow", None) # type: ignore
@@ -248,16 +246,39 @@ async def text_router(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     if flow.get("action") == "user_reply_admin":
         user_name = user.first_name or user.username or "Пользователь"
         msg_text = f"📩 Ответ от {user_name} ({user_id}):\n\n{text}"
-        try:
-            await ctx.bot.send_message(chat_id=int(admin_id_cfg), text=msg_text)
-            await ctx.bot.send_message(chat_id=chat_id, text="✅ Ваше сообщение успешно отправлено администратору.")
-        except Exception as e:
-            logger.error(f"Не удалось переслать ответ админу от {user_id}: {e}")
-            await ctx.bot.send_message(chat_id=chat_id, text="❌ Ошибка при отправке сообщения.")
+        
+        all_admins = get_all_admins(state)
+        for admin_id in all_admins:
+            try:
+                await ctx.bot.send_message(chat_id=int(admin_id), text=msg_text)
+            except Exception as e:
+                logger.error(f"Не удалось переслать ответ админу {admin_id} от {user_id}: {e}")
+        
+        await ctx.bot.send_message(chat_id=chat_id, text="✅ Ваше сообщение успешно отправлено администраторам.")
             
         ctx.chat_data.pop("flow", None) # type: ignore
         await remove_prompt(ctx, chat_id)
         await update_menu(ctx, chat_id, "Главное меню:", main_menu_markup(user_id))
+        return
+
+    if flow.get("action") == "admin_add_admin_input" and is_main_admin(user_id):
+        new_admin_id = text.strip()
+        if not new_admin_id.isdigit():
+            await ctx.bot.send_message(chat_id=chat_id, text="❌ Ошибка: ID должен состоять только из цифр.")
+            return
+            
+        admins = state.setdefault("admins", [])
+        if new_admin_id not in admins and new_admin_id != config.ADMIN_CHAT_ID:
+            admins.append(new_admin_id)
+            save_state(state)
+            await ctx.bot.send_message(chat_id=chat_id, text=f"✅ Пользователь {new_admin_id} добавлен как администратор.")
+        else:
+            await ctx.bot.send_message(chat_id=chat_id, text=f"ℹ Пользователь {new_admin_id} уже является администратором.")
+            
+        ctx.chat_data.pop("flow", None) # type: ignore
+        await remove_prompt(ctx, chat_id)
+        all_admins_list = get_all_admins(state)
+        await update_menu(ctx, chat_id, "Управление администраторами:", admin_manage_admins_markup(all_admins_list))
         return
 
     ctx.chat_data.pop("flow", None) # type: ignore

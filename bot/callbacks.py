@@ -1,11 +1,11 @@
-import logging
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
-from core.state import load_state, save_state
+from core.state import load_state, save_state, get_all_admins, is_admin, is_main_admin
 from core.config import config
-from bot.markups import main_menu_markup, groups_list_markup, group_view_markup, cancel_markup, admin_panel_markup, admin_broadcast_menu_markup, admin_user_markup, admin_addr_markup
+from bot.markups import main_menu_markup, groups_list_markup, group_view_markup, cancel_markup, admin_panel_markup, admin_broadcast_menu_markup, admin_user_markup, admin_addr_markup, admin_manage_admins_markup
 from bot.handlers import update_menu, remove_menu_only, remove_prompt
 from services.address import find_group, find_address
+import logging
 
 logger = logging.getLogger("btc_notify")
 
@@ -138,7 +138,7 @@ async def callback_router(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
                 await update_menu(ctx, chat_id, "Главное меню:", main_menu_markup(user_id))
                 return
         elif target == "admin_panel":
-            await update_menu(ctx, chat_id, "👑 Админ панель - Список пользователей:", admin_panel_markup(state.get("users", {})))
+            await update_menu(ctx, chat_id, "👑 Админ панель - Список пользователей:", admin_panel_markup(state.get("users", {}), user_id))
             return
         elif target.startswith("admin_user:"):
             target_uid = target.split(":")[1]
@@ -151,18 +151,37 @@ async def callback_router(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         await update_menu(ctx, chat_id, "Главное меню:", main_menu_markup(user_id))
         return
 
-    admin_id_cfg = str(config.ADMIN_CHAT_ID)
-    
-    if data == "admin_panel" and user_id == admin_id_cfg:
-        await update_menu(ctx, chat_id, "👑 Админ панель - Список пользователей:", admin_panel_markup(state.get("users", {})))
+    if data == "admin_panel" and is_admin(user_id, state):
+        await update_menu(ctx, chat_id, "👑 Админ панель - Список пользователей:", admin_panel_markup(state.get("users", {}), user_id))
         return
-        
-    if data == "admin_broadcast_menu" and user_id == admin_id_cfg:
+
+    if data == "admin_manage_admins" and is_main_admin(user_id):
+        all_admins_list = get_all_admins(state)
+        await update_menu(ctx, chat_id, "Управление администраторами:", admin_manage_admins_markup(all_admins_list))
+        return
+
+    if data and data.startswith("admin_del_admin:") and is_main_admin(user_id):
+        del_uid = data.split(":", 1)[1]
+        admins = state.get("admins", [])
+        if del_uid in admins:
+            admins.remove(del_uid)
+            save_state(state)
+        all_admins_list = get_all_admins(state)
+        await update_menu(ctx, chat_id, "Управление администраторами:", admin_manage_admins_markup(all_admins_list))
+        return
+
+    if data == "admin_add_admin_prompt" and is_main_admin(user_id):
+        await remove_menu_only(ctx, chat_id)
+        prompt = await ctx.bot.send_message(chat_id=chat_id, text="Введите Telegram ID нового администратора (только цифры):", reply_markup=cancel_markup("admin_panel"))
+        ctx.chat_data["flow"] = {"action": "admin_add_admin_input", "prompt_id": prompt.message_id} # type: ignore
+        return
+
+    if data == "admin_broadcast_menu" and is_admin(user_id, state):
         selected = ctx.chat_data.setdefault("broadcast_targets", set()) # type: ignore
         await update_menu(ctx, chat_id, "Выберите пользователей для рассылки:", admin_broadcast_menu_markup(state.get("users", {}), selected))
         return
 
-    if data and data.startswith("admin_broadcast_toggle:") and user_id == admin_id_cfg:
+    if data and data.startswith("admin_broadcast_toggle:") and is_admin(user_id, state):
         target_uid = data.split(":", 1)[1]
         selected = ctx.chat_data.setdefault("broadcast_targets", set()) # type: ignore
         if target_uid in selected:
@@ -172,7 +191,7 @@ async def callback_router(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         await update_menu(ctx, chat_id, "Выберите пользователей для рассылки:", admin_broadcast_menu_markup(state.get("users", {}), selected))
         return
 
-    if data == "admin_broadcast_select_all" and user_id == admin_id_cfg:
+    if data == "admin_broadcast_select_all" and is_admin(user_id, state):
         selected = ctx.chat_data.setdefault("broadcast_targets", set()) # type: ignore
         all_uids = set(state.get("users", {}).keys())
         if selected == all_uids:
@@ -182,7 +201,7 @@ async def callback_router(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         await update_menu(ctx, chat_id, "Выберите пользователей для рассылки:", admin_broadcast_menu_markup(state.get("users", {}), selected))
         return
 
-    if data == "admin_broadcast_write" and user_id == admin_id_cfg:
+    if data == "admin_broadcast_write" and is_admin(user_id, state):
         selected = ctx.chat_data.get("broadcast_targets", set()) # type: ignore
         if not selected:
             await update_menu(ctx, chat_id, "Никто не выбран.", admin_broadcast_menu_markup(state.get("users", {}), selected))
@@ -192,14 +211,14 @@ async def callback_router(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         ctx.chat_data["flow"] = {"action": "admin_broadcast_text", "prompt_id": prompt.message_id} # type: ignore
         return
 
-    if data and data.startswith("admin_add_addr:") and user_id == admin_id_cfg:
+    if data and data.startswith("admin_add_addr:") and is_admin(user_id, state):
         target_uid = data.split(":", 1)[1]
         await remove_menu_only(ctx, chat_id)
         prompt = await ctx.bot.send_message(chat_id=chat_id, text="Введите название группы для этого пользователя:", reply_markup=cancel_markup(f"admin_user:{target_uid}"))
         ctx.chat_data["flow"] = {"action": "admin_add_name", "target_uid": target_uid, "prompt_id": prompt.message_id} # type: ignore
         return
 
-    if data and data.startswith("admin_user:") and user_id == admin_id_cfg:
+    if data and data.startswith("admin_user:") and is_admin(user_id, state):
         target_uid = data.split(":", 1)[1]
         target_user = state.get("users", {}).get(target_uid, {})
         name = target_user.get("first_name") or target_user.get("username") or target_uid
@@ -207,7 +226,7 @@ async def callback_router(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         await update_menu(ctx, chat_id, text, admin_user_markup(target_uid, target_user)) # type: ignore
         return
 
-    if data and data.startswith("admin_addr:") and user_id == admin_id_cfg:
+    if data and data.startswith("admin_addr:") and is_admin(user_id, state):
         _, target_uid, gid, aid = data.split(":")
         target_user = state.get("users", {}).get(target_uid, {})
         group = find_group(target_user, gid) # type: ignore
@@ -220,7 +239,7 @@ async def callback_router(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         await update_menu(ctx, chat_id, text, admin_addr_markup(target_uid, gid, aid, addr.get("notify_disabled"))) # type: ignore
         return
 
-    if data and data.startswith("admin_toggle_notify:") and user_id == admin_id_cfg:
+    if data and data.startswith("admin_toggle_notify:") and is_admin(user_id, state):
         _, target_uid, gid, aid = data.split(":")
         target_user = state.get("users", {}).get(target_uid, {})
         group = find_group(target_user, gid) # type: ignore
@@ -234,7 +253,7 @@ async def callback_router(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
                 await update_menu(ctx, chat_id, text, admin_addr_markup(target_uid, gid, aid, addr.get("notify_disabled"))) # type: ignore
         return
 
-    if data and data.startswith("admin_del_addr:") and user_id == admin_id_cfg:
+    if data and data.startswith("admin_del_addr:") and is_admin(user_id, state):
         _, target_uid, gid, aid = data.split(":")
         target_user = state.get("users", {}).get(target_uid, {})
         group = find_group(target_user, gid) # type: ignore

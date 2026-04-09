@@ -8,7 +8,7 @@ from urllib.parse import parse_qsl
 from pathlib import Path
 from aiohttp import web
 from core.config import config, BASE_DIR
-from core.state import load_state, save_state
+from core.state import load_state, save_state, is_admin as check_is_admin, is_main_admin, get_all_admins
 from services.address import mk_group, mk_address, find_group, find_address
 
 logger = logging.getLogger("btc_notify")
@@ -41,7 +41,7 @@ async def web_api_get(request):
         
         uid = str(user.get("id"))
         state = load_state()
-        is_admin = (uid == str(config.ADMIN_CHAT_ID))
+        is_admin = check_is_admin(uid, state)
         
         user_data = state.get("users", {}).get(uid, {"groups": []})
         response = {
@@ -50,6 +50,9 @@ async def web_api_get(request):
         }
         if is_admin:
             response["all_users"] = state.get("users", {})
+        if is_main_admin(uid):
+            response["is_main_admin"] = True
+            response["admins"] = state.get("admins", [])
             
         return web.json_response(response)
     except Exception as e:
@@ -69,7 +72,7 @@ async def web_api_action(request):
             
         uid = str(user.get("id"))
         state = load_state()
-        is_admin = (uid == str(config.ADMIN_CHAT_ID))
+        is_admin = check_is_admin(uid, state)
         
         user_data = state.setdefault("users", {}).setdefault(uid, {"groups": []}) # type: ignore
         
@@ -181,12 +184,35 @@ async def web_api_action(request):
                 if sender_role == "admin":
                     await bot.send_message(chat_id=int(target_uid), text=f"📩 Сообщение от администратора:\n\n{text}")
                 else:
-                    admin_chat_id = config.ADMIN_CHAT_ID
+                    all_admins = get_all_admins(state)
                     user_name = user.get("first_name") or user.get("username") or uid
-                    await bot.send_message(chat_id=int(admin_chat_id), text=f"📩 Новое сообщение в Mini App от {user_name} ({uid}):\n\n{text}")
+                    for admin_id in all_admins:
+                        try:
+                            await bot.send_message(chat_id=int(admin_id), text=f"📩 Новое сообщение в Mini App от {user_name} ({uid}):\n\n{text}")
+                        except Exception as e:
+                            logger.error(f"Error sending chat notification to admin {admin_id}: {e}")
             except Exception as e:
-                logger.error(f"Error sending chat notification: {e}")
+                logger.error(f"Error handling send_chat_message: {e}")
                 
+            return web.json_response({"success": True})
+
+        elif action == "admin_add_admin" and is_main_admin(uid):
+            new_admin_id = str(payload.get("uid")).strip()
+            if not new_admin_id or not new_admin_id.isdigit():
+                return web.json_response({"error": "Invalid UID"}, status=400)
+            
+            admins = state.setdefault("admins", [])
+            if new_admin_id not in admins and new_admin_id != config.ADMIN_CHAT_ID:
+                admins.append(new_admin_id)
+                save_state(state)
+            return web.json_response({"success": True})
+
+        elif action == "admin_remove_admin" and is_main_admin(uid):
+            remove_admin_id = str(payload.get("uid")).strip()
+            admins = state.get("admins", [])
+            if remove_admin_id in admins:
+                admins.remove(remove_admin_id)
+                save_state(state)
             return web.json_response({"success": True})
             
         return web.json_response({"error": "Unknown action"}, status=400)

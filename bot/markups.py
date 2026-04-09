@@ -1,5 +1,6 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from core.config import config
+from core.state import get_all_admins, is_main_admin, load_state
 
 def main_menu_markup(user_id: str = None):
     kb = []
@@ -9,7 +10,8 @@ def main_menu_markup(user_id: str = None):
         [InlineKeyboardButton("➕ Добавить адрес", callback_data="menu_add_address")],
         [InlineKeyboardButton("🗑 Удалить название", callback_data="menu_remove_group")]
     ])
-    if user_id == str(config.ADMIN_CHAT_ID):
+    state = load_state()
+    if user_id and user_id in get_all_admins(state):
         kb.append([InlineKeyboardButton("👑 Админ панель", callback_data="admin_panel")])
     return InlineKeyboardMarkup(kb)
 
@@ -31,13 +33,26 @@ def group_view_markup(group):
 def cancel_markup(target="menu_main"):
     return InlineKeyboardMarkup([[InlineKeyboardButton("❌ Отмена", callback_data=f"cancel:{target}")]])
 
-def admin_panel_markup(users):
+def admin_panel_markup(users, current_uid=None):
     kb = []
     for uid, udata in users.items():
         name = udata.get("first_name") or udata.get("username") or f"ID: {uid}"
         kb.append([InlineKeyboardButton(f"👤 {name} ({uid})", callback_data=f"admin_user:{uid}")])
     kb.append([InlineKeyboardButton("✉ Рассылка сообщений", callback_data="admin_broadcast_menu")])
+    if current_uid and is_main_admin(current_uid):
+        kb.append([InlineKeyboardButton("👥 Управление админами", callback_data="admin_manage_admins")])
     kb.append([InlineKeyboardButton("⬅ Назад", callback_data="menu_main")])
+    return InlineKeyboardMarkup(kb)
+
+def admin_manage_admins_markup(admins):
+    kb = []
+    for uid in admins:
+        if not is_main_admin(uid):
+            kb.append([InlineKeyboardButton(f"👤 {uid} ❌ Удалить", callback_data=f"admin_del_admin:{uid}")])
+        else:
+            kb.append([InlineKeyboardButton(f"👑 Главный: {uid}", callback_data="noop")])
+    kb.append([InlineKeyboardButton("➕ Добавить администратора", callback_data="admin_add_admin_prompt")])
+    kb.append([InlineKeyboardButton("⬅ Назад", callback_data="admin_panel")])
     return InlineKeyboardMarkup(kb)
 
 def admin_broadcast_menu_markup(users, selected_uids):

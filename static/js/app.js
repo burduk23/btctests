@@ -296,38 +296,75 @@
             
             if(Object.keys(users).length === 0) {
                 list.innerHTML = '<div class="empty-state">Пользователей не найдено.</div>';
-                return;
-            }
-            
-            for (const [uid, udata] of Object.entries(users)) {
-                const name = udata.first_name || udata.username || uid;
-                
-                // Add to broadcast list
-                const bcItem = document.createElement('label');
-                bcItem.className = 'user-checkbox';
-                bcItem.innerHTML = `<input type="checkbox" value="${uid}" class="bc-checkbox"> <span>${name} (${uid})</span>`;
-                bcList.appendChild(bcItem);
+            } else {
+                for (const [uid, udata] of Object.entries(users)) {
+                    const name = udata.first_name || udata.username || uid;
+                    
+                    // Add to broadcast list
+                    const bcItem = document.createElement('label');
+                    bcItem.className = 'user-checkbox';
+                    bcItem.innerHTML = `<input type="checkbox" value="${uid}" class="bc-checkbox"> <span>${name} (${uid})</span>`;
+                    bcList.appendChild(bcItem);
 
-                // Add to main user list
-                const uDiv = document.createElement('div');
-                uDiv.className = 'group';
-                
-                let addrsHtml = '';
-                (udata.groups || []).forEach(g => {
-                    (g.addresses || []).forEach(a => {
-                        const isOff = a.notify_disabled;
-                        addrsHtml += `<div class="address"><div class="address-info"><small style="color:var(--button-color); font-weight:bold;">${g.name}</small><span class="address-text">${a.addr}</span></div><div style="display:flex; flex-direction:column; gap:6px;"><button onclick="apiCall('admin_toggle_notify', {uid: '${uid}', gid: '${g.id}', aid: '${a.id}'})" class="btn-small" style="background:${isOff?'#9e9e9e':'#4caf50'};">${isOff?'❌ Выкл':'✅ Вкл'}</button><button onclick="apiCall('admin_delete_address', {uid: '${uid}', gid: '${g.id}', aid: '${a.id}'})" class="red btn-small">🗑 Удал</button></div></div>`;
+                    // Add to main user list
+                    const uDiv = document.createElement('div');
+                    uDiv.className = 'group';
+                    
+                    let addrsHtml = '';
+                    (udata.groups || []).forEach(g => {
+                        (g.addresses || []).forEach(a => {
+                            const isOff = a.notify_disabled;
+                            addrsHtml += `<div class="address"><div class="address-info"><small style="color:var(--button-color); font-weight:bold;">${g.name}</small><span class="address-text">${a.addr}</span></div><div style="display:flex; flex-direction:column; gap:6px;"><button onclick="apiCall('admin_toggle_notify', {uid: '${uid}', gid: '${g.id}', aid: '${a.id}'})" class="btn-small" style="background:${isOff?'#9e9e9e':'#4caf50'};">${isOff?'❌ Выкл':'✅ Вкл'}</button><button onclick="apiCall('admin_delete_address', {uid: '${uid}', gid: '${g.id}', aid: '${a.id}'})" class="red btn-small">🗑 Удал</button></div></div>`;
+                        });
                     });
-                });
 
-                uDiv.innerHTML = `
-                    <div class="group-header">
-                        <div><strong>👤 ${name}</strong> <span style="color:var(--hint-color); font-size:12px; margin-left:8px;">ID: ${uid}</span></div>
-                        <button class="outline btn-small" onclick="switchTab('chat'); openChat('${uid}');">💬 Чат</button>
-                    </div>
-                    ${addrsHtml}
-                `;
-                list.appendChild(uDiv);
+                    uDiv.innerHTML = `
+                        <div class="group-header">
+                            <div><strong>👤 ${name}</strong> <span style="color:var(--hint-color); font-size:12px; margin-left:8px;">ID: ${uid}</span></div>
+                            <button class="outline btn-small" onclick="switchTab('chat'); openChat('${uid}');">💬 Чат</button>
+                        </div>
+                        ${addrsHtml}
+                    `;
+                    list.appendChild(uDiv);
+                }
+            }
+
+            // Manage Admins Section
+            const adminMgmtSection = document.getElementById('admin-management-section');
+            if (stateData.is_main_admin) {
+                adminMgmtSection.classList.remove('hidden');
+                const adminsList = document.getElementById('admins-list');
+                adminsList.innerHTML = '';
+                if (stateData.admins && stateData.admins.length > 0) {
+                    for (const adminId of stateData.admins) {
+                        adminsList.innerHTML += `<div class="group" style="display: flex; justify-content: space-between; align-items: center;"><div class="address-info"><strong>👤 ${adminId}</strong></div><div><button onclick="adminRemoveAdmin('${adminId}')" class="red btn-small">🗑 Удалить</button></div></div>`;
+                    }
+                } else {
+                    adminsList.innerHTML = '<div class="empty-state">Нет дополнительных администраторов</div>';
+                }
+            } else {
+                if (adminMgmtSection) adminMgmtSection.classList.add('hidden');
+            }
+        }
+
+        async function adminAddAdmin() {
+            const uidInput = document.getElementById('new-admin-uid');
+            const uid = uidInput.value.trim();
+            if (!uid) { showToast('Введите ID администратора', true); return; }
+            
+            if (await apiCall('admin_add_admin', { uid })) {
+                uidInput.value = '';
+                showToast('✅ Администратор добавлен');
+                loadData(false);
+            }
+        }
+
+        async function adminRemoveAdmin(uid) {
+            if (confirm(`Удалить администратора ${uid}?`)) {
+                if (await apiCall('admin_remove_admin', { uid })) {
+                    showToast('✅ Администратор удален');
+                    loadData(false);
+                }
             }
         }
 
