@@ -298,7 +298,8 @@
                     const isMe = m.from === myRole;
                     const b = document.createElement('div');
                     b.className = `msg-bubble ${isMe ? 'me' : 'them'}`;
-                    b.innerHTML = `${m.text}<span class="msg-time">${formatTime(m.ts)}</span>`;
+                    const ticksHtml = isMe ? `<span class="msg-ticks">${m.read ? '<svg viewBox="0 0 24 24"><path d="M18 6L7 17l-5-5M22 10l-6 6"/></svg>' : '<svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>'}</span>` : '';
+                    b.innerHTML = `${m.text}<span class="msg-time">${formatTime(m.ts)}${ticksHtml}</span>`;
                     container.appendChild(b);
                 });
             }
@@ -325,7 +326,8 @@
             const container = document.getElementById('chat-messages');
             const b = document.createElement('div');
             b.className = `msg-bubble me`;
-            b.innerHTML = `${text}<span class="msg-time">${formatTime(Math.floor(Date.now()/1000))}</span>`;
+            const ticks = `<span class="msg-ticks"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></span>`;
+            b.innerHTML = `${text}<span class="msg-time">${formatTime(Math.floor(Date.now()/1000))}${ticks}</span>`;
             
             // Remove empty state if present
             if(container.children.length === 1 && container.children[0].innerText.includes('Здесь будет')) {
