@@ -6,7 +6,7 @@ from .routes import web_index, web_api_get, web_api_action
 logger = logging.getLogger("btc_notify")
 
 async def start_web_server(app):
-    webapp = web.Application()
+    webapp = web.Application(client_max_size=1024**2 * 10)
     webapp['bot_app'] = app
     webapp.router.add_get('/', web_index)
     webapp.router.add_post('/api/get', web_api_get)

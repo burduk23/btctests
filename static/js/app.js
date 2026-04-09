@@ -327,7 +327,7 @@
                     const isMe = m.from === myRole;
                     const b = document.createElement('div');
                     b.className = `msg-bubble ${isMe ? 'me' : 'them'}`;
-                    const ticksHtml = isMe ? `<span class="msg-ticks">${m.read ? '<svg viewBox="0 0 24 24"><path d="M18 6L7 17l-5-5M22 10l-6 6"/></svg>' : '<svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>'}</span>` : '';
+                    const ticksHtml = isMe ? `<span class="msg-ticks">${m.read ? '<svg viewBox="0 0 24 24"><path d="M7 12l5 5L22 7M2 12l5 5l2-2"/></svg>' : '<svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>'}</span>` : '';
                     
                     let contentHtml = '';
                     if (m.image) {
@@ -366,7 +366,7 @@
             const container = document.getElementById('chat-messages');
             const b = document.createElement('div');
             b.className = `msg-bubble me`;
-            const ticks = `<span class="msg-ticks"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></span>`;
+            const ticks = `<span class="msg-ticks"><svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span>`;
             
             let optimisticHtml = '';
             if (sentImage) {
