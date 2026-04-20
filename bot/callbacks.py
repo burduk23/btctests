@@ -30,12 +30,6 @@ async def callback_router(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         await update_menu(ctx, chat_id, "Главное меню:", main_menu_markup(user_id))
         return
 
-    if data == "exchange":
-        await remove_menu_only(ctx, chat_id)
-        prompt = await ctx.bot.send_message(chat_id=chat_id, text="Введите сумму в Bitcoin (например 0.0045).", reply_markup=cancel_markup("menu_main"))
-        ctx.chat_data["flow"] = {"action": "exchange_wait_amount", "prompt_id": prompt.message_id} # type: ignore
-        return
-
     if data == "menu_groups":
         groups = user_data.get("groups", [])
         if not groups:

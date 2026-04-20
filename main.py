@@ -5,7 +5,6 @@ from core.config import config
 from bot.handlers import cmd_start, text_router, error_handler
 from bot.callbacks import callback_router
 from services.monitoring import monitor_loop
-from services.exchange import BrowserService
 from api.server import start_web_server
 
 # ---------------- logging ----------------
@@ -26,9 +25,6 @@ def main():
     app.add_error_handler(error_handler)
 
     async def _post_init(application):
-        logger.info("Запуск BrowserService (Playwright)...")
-        await BrowserService.start()
-        
         logger.info("Запуск фонового мониторинга транзакций...")
         import asyncio
         asyncio.create_task(monitor_loop(application))
@@ -36,12 +32,7 @@ def main():
         logger.info("Запуск веб-сервера для Mini App...")
         asyncio.create_task(start_web_server(application))
 
-    async def _post_stop(application):
-        logger.info("Остановка BrowserService (Playwright)...")
-        await BrowserService.stop()
-
     app.post_init = _post_init
-    app.post_stop = _post_stop
 
     logger.info("Бот запущен и ожидает сообщений...")
     app.run_polling()

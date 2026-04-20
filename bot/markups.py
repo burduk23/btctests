@@ -5,7 +5,6 @@ from core.state import get_all_admins, is_main_admin, load_state
 def main_menu_markup(user_id: str = None):
     kb = []
     kb.extend([
-        [InlineKeyboardButton("💱 Обмен", callback_data="exchange")],
         [InlineKeyboardButton("📂 Список адресов", callback_data="menu_groups")],
         [InlineKeyboardButton("➕ Добавить адрес", callback_data="menu_add_address")],
         [InlineKeyboardButton("🗑 Удалить название", callback_data="menu_remove_group")]

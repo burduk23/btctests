@@ -13,8 +13,7 @@ ADMIN_ID_DEFAULT = "5381999598"
 class ConfigModel(BaseModel):
     BOT_TOKEN: str
     POLL_INTERVAL: int = 20
-    API_BASE: str = "https://api.blockcypher.com/v1/btc/main"
-    API_TOKEN: str
+    API_BASE: str = "https://blockstream.info/api"
     ADMIN_CHAT_ID: str = ADMIN_ID_DEFAULT
     WEB_PORT: int = 8080
     WEBAPP_URL: str = ""

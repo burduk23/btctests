@@ -5,7 +5,6 @@ from core.state import load_state, save_state, get_all_admins, is_admin, is_main
 from core.config import config
 from bot.markups import main_menu_markup, cancel_markup, group_view_markup, admin_user_markup, admin_manage_admins_markup
 from services.address import mk_group, mk_address, find_group, find_address
-from services.exchange import BrowserService
 
 logger = logging.getLogger("btc_notify")
 
@@ -71,31 +70,6 @@ async def text_router(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         return
 
     text = update.message.text.strip() # type: ignore
-
-    if flow.get("action") == "exchange_wait_amount":
-        text_val = text.replace(',', '.')
-        try:
-            btc_amount = float(text_val)
-            if btc_amount <= 0:
-                raise ValueError()
-        except ValueError:
-            await ctx.bot.send_message(chat_id=chat_id, text="Пожалуйста, отправьте корректное число (например, 0.0045).", reply_markup=cancel_markup("menu_main"))
-            return
-
-        await remove_prompt(ctx, chat_id)
-        wait_msg = await ctx.bot.send_message(chat_id=chat_id, text="Проверяю курс... ⏳")
-        ctx.chat_data.pop("flow", None) # type: ignore
-        
-        result = await BrowserService.get_exchange_rate(btc_amount)
-        
-        try:
-            await ctx.bot.delete_message(chat_id=chat_id, message_id=wait_msg.message_id)
-        except Exception:
-            pass
-
-        kb = [[InlineKeyboardButton("🔙 Назад", callback_data="menu_main")]]
-        await ctx.bot.send_message(chat_id=chat_id, text=f"За {btc_amount} BTC вы отдадите:\n**{result}**", parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(kb))
-        return
 
     if flow.get("action") == "add_address_name":
         name = text
