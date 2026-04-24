@@ -113,24 +113,41 @@ async def monitor_loop(app):
                                         "amount_usd": amount_usd
                                     } # type: ignore
 
-                                # 2. Если транзакция из unconfirmed получила подтверждение
-                                elif confirmed and txid in state.get("unconfirmed", {}):
-                                    info = state["unconfirmed"][txid]
-                                    addr = info["addr"]
-                                    amount_btc = info.get("amount_btc", 0)
-                                    amount_usd = info.get("amount_usd", 0)
+                                # 2. Транзакция подтверждена
+                                elif confirmed:
+                                    if txid in state.get("unconfirmed", {}):
+                                        # Была неподтвержденной, теперь подтвердилась
+                                        info = state["unconfirmed"][txid]
+                                        addr = info["addr"]
+                                        amount_btc = info.get("amount_btc", 0)
+                                        amount_usd = info.get("amount_usd", 0)
 
-                                    subs = addr_to_subs.get(addr, [])
-                                    for sub in subs:
-                                        if sub.get("disabled"):
-                                            continue
-                                        uid = sub["uid"]
-                                        group_name = sub["group_name"]
-                                        all_admins = get_all_admins(state)
-                                        for admin_id in all_admins:
+                                        subs = addr_to_subs.get(addr, [])
+                                        for sub in subs:
+                                            if sub.get("disabled"):
+                                                continue
+                                            uid = sub["uid"]
+                                            group_name = sub["group_name"]
+                                            all_admins = get_all_admins(state)
+                                            for admin_id in all_admins:
+                                                try:
+                                                    await app.bot.send_message(
+                                                        chat_id=int(admin_id),
+                                                        text=f"✅ Транзакция получила 1+ подтверждение\n"
+                                                             f"————————————\n"
+                                                             f"**{group_name}**\n"
+                                                             f"`{addr}`\n"
+                                                             f"————————————\n"
+                                                             f"💰 Сумма: `{amount_btc:.8f}` BTC | `${amount_usd}`\n"
+                                                             f"————————————\n"
+                                                             f"📍 https://blockchair.com/bitcoin/transaction/{txid}",
+                                                        parse_mode="Markdown"
+                                                    )
+                                                except Exception as e:
+                                                    logger.debug(f"Не удалось отправить уведомление админу {admin_id}: {e}")
                                             try:
                                                 await app.bot.send_message(
-                                                    chat_id=int(admin_id),
+                                                    chat_id=int(uid),
                                                     text=f"✅ Транзакция получила 1+ подтверждение\n"
                                                          f"————————————\n"
                                                          f"**{group_name}**\n"
@@ -142,25 +159,64 @@ async def monitor_loop(app):
                                                     parse_mode="Markdown"
                                                 )
                                             except Exception as e:
-                                                logger.debug(f"Не удалось отправить уведомление админу {admin_id}: {e}")
-                                        try:
-                                            await app.bot.send_message(
-                                                chat_id=int(uid),
-                                                text=f"✅ Транзакция получила 1+ подтверждение\n"
-                                                     f"————————————\n"
-                                                     f"**{group_name}**\n"
-                                                     f"`{addr}`\n"
-                                                     f"————————————\n"
-                                                     f"💰 Сумма: `{amount_btc:.8f}` BTC | `${amount_usd}`\n"
-                                                     f"————————————\n"
-                                                     f"📍 https://blockchair.com/bitcoin/transaction/{txid}",
-                                                parse_mode="Markdown"
-                                            )
-                                        except Exception as e:
-                                            logger.debug(f"Не удалось отправить уведомление {uid}: {e}")
+                                                logger.debug(f"Не удалось отправить уведомление {uid}: {e}")
+                                        
+                                        state["unconfirmed"].pop(txid, None)
+                                    else:
+                                        # Мы видим транзакцию впервые и она УЖЕ подтверждена.
+                                        # Проверим, не слишком ли она старая (например, не старше 24 часов)
+                                        block_time = status.get("block_time", 0)
+                                        import time
+                                        if time.time() - block_time < 86400:
+                                            amount_sat = 0
+                                            for vout in tx.get("vout", []):
+                                                if vout.get("scriptpubkey_address") == addr:
+                                                    amount_sat += vout.get("value", 0)
+                                            
+                                            if amount_sat > 0:
+                                                amount_btc = amount_sat / 1e8
+                                                amount_usd = round(amount_btc * btc_price, 2)
+                                                
+                                                subs = addr_to_subs.get(addr, [])
+                                                for sub in subs:
+                                                    if sub.get("disabled"):
+                                                        continue
+                                                    uid = sub["uid"]
+                                                    group_name = sub["group_name"]
+                                                    all_admins = get_all_admins(state)
+                                                    for admin_id in all_admins:
+                                                        try:
+                                                            await app.bot.send_message(
+                                                                chat_id=int(admin_id),
+                                                                text=f"🔔✅ Новая транзакция (сразу confirmed)\n"
+                                                                     f"————————————\n"
+                                                                     f"**{group_name}**\n"
+                                                                     f"`{addr}`\n"
+                                                                     f"————————————\n"
+                                                                     f"💰 Сумма: `{amount_btc:.8f}` BTC | `${amount_usd}`\n"
+                                                                     f"————————————\n"
+                                                                     f"📍 https://blockchair.com/bitcoin/transaction/{txid}",
+                                                                parse_mode="Markdown"
+                                                            )
+                                                        except Exception as e:
+                                                            logger.debug(f"Не удалось отправить уведомление админу {admin_id}: {e}")
+                                                    try:
+                                                        await app.bot.send_message(
+                                                            chat_id=int(uid),
+                                                            text=f"🔔✅ Новая транзакция (сразу confirmed)\n"
+                                                                 f"————————————\n"
+                                                                 f"**{group_name}**\n"
+                                                                 f"`{addr}`\n"
+                                                                 f"————————————\n"
+                                                                 f"💰 Сумма: `{amount_btc:.8f}` BTC | `${amount_usd}`\n"
+                                                                 f"————————————\n"
+                                                                 f"📍 https://blockchair.com/bitcoin/transaction/{txid}",
+                                                            parse_mode="Markdown"
+                                                        )
+                                                    except Exception as e:
+                                                        logger.debug(f"Не удалось отправить уведомление {uid}: {e}")
 
                                     state.setdefault("notified_confirmed", {})[txid] = True # type: ignore
-                                    state["unconfirmed"].pop(txid, None)
 
                     except Exception as e:
                         logger.debug(f"Ошибка при опросе {addr}: {e}")

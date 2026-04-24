@@ -340,7 +340,7 @@
                 });
             }
             
-            if (isAtBottom || messages.length > 0) {
+            if (isAtBottom) {
                 container.scrollTop = container.scrollHeight;
             }
         }
