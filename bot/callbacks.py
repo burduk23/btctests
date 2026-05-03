@@ -4,7 +4,7 @@ from core.state import load_state, save_state, get_all_admins, is_admin, is_main
 from core.config import config
 from bot.markups import main_menu_markup, groups_list_markup, group_view_markup, cancel_markup, admin_panel_markup, admin_broadcast_menu_markup, admin_user_markup, admin_addr_markup, admin_manage_admins_markup
 from bot.handlers import update_menu, remove_menu_only, remove_prompt
-from services.address import find_group, find_address
+from services.address import find_group, find_address, mk_group, mk_address
 import logging
 
 logger = logging.getLogger("btc_notify")
@@ -115,6 +115,59 @@ async def callback_router(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             save_state(state)
             await update_menu(ctx, chat_id, "Адрес удалён.", group_view_markup(group))
         return
+
+    if data and data.startswith("conf:"):
+        confirmations = int(data.split(":")[1])
+        flow = ctx.chat_data.get("flow") # type: ignore
+        if not flow or flow.get("action") != "waiting_for_confirmations":
+            await update_menu(ctx, chat_id, "Главное меню:", main_menu_markup(user_id))
+            return
+        
+        addr = flow.get("addr")
+        
+        if flow.get("target_uid"): # Admin adding for user
+            target_uid = flow.get("target_uid")
+            name = flow.get("name")
+            target_user = state.setdefault("users", {}).setdefault(target_uid, {"groups": []}) # type: ignore
+            group = next((g for g in target_user.get("groups", []) if g["name"].lower() == name.lower()), None)
+            if not group:
+                group = mk_group(name)
+                target_user.setdefault("groups", []).append(group) # type: ignore
+            group.setdefault("addresses", []).append(mk_address(addr, confirmations)) # type: ignore
+            save_state(state)
+            ctx.chat_data.pop("flow", None) # type: ignore
+            await remove_prompt(ctx, chat_id)
+            await ctx.bot.send_message(chat_id=chat_id, text=f"✅ Адрес добавлен пользователю {target_uid} в «{name}» ({confirmations} подтв.).")
+            await update_menu(ctx, chat_id, f"Пользователь: {target_uid}\n\nВыберите адрес для управления:", admin_user_markup(target_uid, target_user)) # type: ignore
+            return
+            
+        elif flow.get("gid"): # User adding to existing group
+            gid = flow.get("gid")
+            group = find_group(user_data, gid) # type: ignore
+            if group:
+                group.setdefault("addresses", []).append(mk_address(addr, confirmations)) # type: ignore
+                save_state(state)
+                ctx.chat_data.pop("flow", None) # type: ignore
+                await remove_prompt(ctx, chat_id)
+                await ctx.bot.send_message(chat_id=chat_id, text=f"✅ Адрес добавлен в «{group['name']}» ({confirmations} подтв.).")
+                lines = [f"{idx+1}. <code>{a['addr']}</code>" for idx, a in enumerate(group.get("addresses", []))]
+                body = f"<b>{group['name']}</b>\n\nАдреса:\n" + "\n".join(lines)
+                await update_menu(ctx, chat_id, body, group_view_markup(group)) # type: ignore
+                return
+        
+        else: # User adding to new group
+            name = flow.get("name")
+            group = next((g for g in user_data.get("groups", []) if g["name"].lower() == name.lower()), None)
+            if not group:
+                group = mk_group(name)
+                user_data.setdefault("groups", []).append(group) # type: ignore
+            group.setdefault("addresses", []).append(mk_address(addr, confirmations)) # type: ignore
+            save_state(state)
+            ctx.chat_data.pop("flow", None) # type: ignore
+            await remove_prompt(ctx, chat_id)
+            await ctx.bot.send_message(chat_id=chat_id, text=f"✅ Адрес добавлен в «{name}» ({confirmations} подтв.).")
+            await update_menu(ctx, chat_id, "Главное меню:", main_menu_markup(user_id))
+            return
 
     if data and data.startswith("cancel:"):
         target = data.split(":", 1)[1]

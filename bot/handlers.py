@@ -3,7 +3,7 @@ from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes
 from core.state import load_state, save_state, get_all_admins, is_admin, is_main_admin
 from core.config import config
-from bot.markups import main_menu_markup, cancel_markup, group_view_markup, admin_user_markup, admin_manage_admins_markup
+from bot.markups import main_menu_markup, cancel_markup, group_view_markup, admin_user_markup, admin_manage_admins_markup, confirmations_markup
 from services.address import mk_group, mk_address, find_group, find_address
 
 logger = logging.getLogger("btc_notify")
@@ -84,16 +84,9 @@ async def text_router(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         if len(addr) < 26 or len(addr) > 90:
             await ctx.bot.send_message(chat_id=chat_id, text="Неверный BTC адрес.")
             return
-        group = next((g for g in user_data.get("groups", []) if g["name"].lower() == name.lower()), None)
-        if not group:
-            group = mk_group(name)
-            user_data.setdefault("groups", []).append(group) # type: ignore
-        group.setdefault("addresses", []).append(mk_address(addr)) # type: ignore
-        save_state(state)
-        ctx.chat_data.pop("flow", None) # type: ignore
         await remove_prompt(ctx, chat_id)
-        await ctx.bot.send_message(chat_id=chat_id, text=f"✅ Адрес добавлен в «{name}».")
-        await update_menu(ctx, chat_id, "Главное меню:", main_menu_markup(user_id))
+        prompt = await ctx.bot.send_message(chat_id=chat_id, text="Выберите количество подтверждений для уведомлений:", reply_markup=confirmations_markup("menu_main"))
+        ctx.chat_data["flow"] = {"action": "waiting_for_confirmations", "name": name, "addr": addr, "prompt_id": prompt.message_id} # type: ignore
         return
 
     if flow.get("action") == "add_address_direct":
@@ -107,14 +100,9 @@ async def text_router(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         if len(text) < 26 or len(text) > 90:
             await ctx.bot.send_message(chat_id=chat_id, text="Неверный BTC адрес.")
             return
-        group.setdefault("addresses", []).append(mk_address(text)) # type: ignore
-        save_state(state)
-        ctx.chat_data.pop("flow", None) # type: ignore
         await remove_prompt(ctx, chat_id)
-        await ctx.bot.send_message(chat_id=chat_id, text=f"✅ Адрес добавлен в «{group['name']}».")
-        lines = [f"{idx+1}. <code>{a['addr']}</code>" for idx, a in enumerate(group.get("addresses", []))]
-        body = f"<b>{group['name']}</b>\n\nАдреса:\n" + "\n".join(lines)
-        await update_menu(ctx, chat_id, body, group_view_markup(group)) # type: ignore
+        prompt = await ctx.bot.send_message(chat_id=chat_id, text="Выберите количество подтверждений для уведомлений:", reply_markup=confirmations_markup(f"group:{gid}"))
+        ctx.chat_data["flow"] = {"action": "waiting_for_confirmations", "gid": gid, "addr": text, "prompt_id": prompt.message_id} # type: ignore
         return
 
     if flow.get("action") == "edit_address_select":
@@ -178,18 +166,9 @@ async def text_router(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             await ctx.bot.send_message(chat_id=chat_id, text="Неверный BTC адрес.")
             return
         
-        target_user = state.setdefault("users", {}).setdefault(target_uid, {"groups": []}) # type: ignore
-        group = next((g for g in target_user.get("groups", []) if g["name"].lower() == name.lower()), None)
-        if not group:
-            group = mk_group(name)
-            target_user.setdefault("groups", []).append(group) # type: ignore
-        group.setdefault("addresses", []).append(mk_address(addr)) # type: ignore
-        save_state(state)
-        
-        ctx.chat_data.pop("flow", None) # type: ignore
         await remove_prompt(ctx, chat_id)
-        await ctx.bot.send_message(chat_id=chat_id, text=f"✅ Адрес добавлен пользователю {target_uid} в «{name}».")
-        await update_menu(ctx, chat_id, f"Пользователь: {target_uid}\n\nВыберите адрес для управления:", admin_user_markup(target_uid, target_user)) # type: ignore
+        prompt = await ctx.bot.send_message(chat_id=chat_id, text="Выберите количество подтверждений для уведомлений:", reply_markup=confirmations_markup(f"admin_user:{target_uid}"))
+        ctx.chat_data["flow"] = {"action": "waiting_for_confirmations", "target_uid": target_uid, "name": name, "addr": addr, "prompt_id": prompt.message_id} # type: ignore
         return
 
     if flow.get("action") == "admin_broadcast_text" and is_admin(user_id, state):

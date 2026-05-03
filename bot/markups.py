@@ -32,6 +32,14 @@ def group_view_markup(group):
 def cancel_markup(target="menu_main"):
     return InlineKeyboardMarkup([[InlineKeyboardButton("❌ Отмена", callback_data=f"cancel:{target}")]])
 
+def confirmations_markup(target="menu_main"):
+    kb = [
+        [InlineKeyboardButton("1 подтверждение", callback_data="conf:1")],
+        [InlineKeyboardButton("2 подтверждения", callback_data="conf:2")],
+        [InlineKeyboardButton("❌ Отмена", callback_data=f"cancel:{target}")]
+    ]
+    return InlineKeyboardMarkup(kb)
+
 def admin_panel_markup(users, current_uid=None):
     kb = []
     for uid, udata in users.items():

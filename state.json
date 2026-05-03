@@ -1,0 +1,235 @@
+{
+  "users": {
+    "5381999598": {
+      "groups": [
+        {
+          "id": "0b1640da77e7",
+          "name": "ОМГ",
+          "addresses": [
+            {
+              "id": "c502cf16960d",
+              "addr": "bc1q4y99k4t5wxgyph6acfuup0q6zswz4zlz9kmudk",
+              "notify_disabled": false
+            }
+          ]
+        },
+        {
+          "id": "bc5ad46095c0",
+          "name": "Bs",
+          "addresses": [
+            {
+              "id": "e388c9d47955",
+              "addr": "bc1qr9wcrgqd6u8da9hs9mr85p54kns0gzy3mmlcsh",
+              "notify_disabled": false
+            }
+          ]
+        },
+        {
+          "id": "7e24af19e08b",
+          "name": "Кракен",
+          "addresses": [
+            {
+              "id": "db9d3f96f90d",
+              "addr": "bc1qg3tytftc68jtrgy6exqgr5w75aadtcpmkzy33w",
+              "notify_disabled": false
+            }
+          ]
+        },
+        {
+          "id": "0b4860d648d4",
+          "name": "Кракен Д",
+          "addresses": [
+            {
+              "id": "6600f5604015",
+              "addr": "bc1qhdmmct9d4fwgsgugjrcpmse5yunr8sauvljc8l",
+              "notify_disabled": false
+            }
+          ]
+        },
+        {
+          "id": "2b308bce1dd2",
+          "name": "bc1q9jel7sjcgvrgnjy6vjaukxctl4umtqdmtrhw9n",
+          "addresses": [
+            {
+              "id": "690a58c826bf",
+              "addr": "bc1q9jel7sjcgvrgnjy6vjaukxctl4umtqdmtrhw9n",
+              "notify_disabled": false
+            }
+          ]
+        }
+      ],
+      "username": "bardverified",
+      "first_name": "Александр"
+    },
+    "8283493551": {
+      "groups": [
+        {
+          "id": "8af3b03942a8",
+          "name": "В",
+          "addresses": [
+            {
+              "id": "34f791ba9e20",
+              "addr": "bc1qhdmmct9d4fwgsgugjrcpmse5yunr8sauvljc8l",
+              "notify_disabled": false
+            }
+          ]
+        }
+      ],
+      "username": null,
+      "first_name": "Иван"
+    }
+  },
+  "unconfirmed": {},
+  "notified_confirmed": {
+    "fdee1b14a7a29b1d8b904bc2148a5940a770ac09f3eb9fb93e507247e0956a32": true,
+    "4b3d9d1f1f6133c8921e69d08aa5855d9a31979bdecc770921a64cf84e6ca9fa": true,
+    "ec838092ee4f680b98c2ef2d8ab8ab23f942eafb36a6eefa19c939c9af7230af": true,
+    "da028e5016f71d91acd1f05794b91181b76c6c53e24dde168bef05fc4af2a458": true,
+    "9d432eb18e99d87dc64f7c3591af627985c8deceee0f504cfd74d1110e7a02bc": true,
+    "857149642f9a742c937de5fb19793ea0acb6dfad041a05824a4a56fbb415be11": true,
+    "854ceefd4a487ca1e24c802822d57d9df6436f44e389ed27eba4dc5aae491d6f": true,
+    "3c5f81865c21192b0eb43e6afb71c03ddbbb69e9f4c76a57749ab7e42e7a52c3": true,
+    "68a7bd360ca1883f7ff45f32de4f0a8608ecaa3765c026e580622a67fddb724c": true,
+    "6ba139b03d1a0c41a614d26cd7558e41e902fbdf6fcb6202cdf7e7b79e201329": true,
+    "0a1b73634e8e817e9e0c39ca9f987468275c22efba04029157c1e06f4ff0890a": true,
+    "f173f61bde4140f1cbef8e479a0eea81c63ca5a14ecad708527b6c24fcc80f2a": true,
+    "cb07e9dff32b563b022095663c456f62ae5b8d688456356b5f54ed21f5069095": true,
+    "a78e3520a19c19f82d1c8406373e04ae665803eb9e9d79381112e28e19fa086a": true,
+    "cc98c4345cca95c53872fa195d2ecd1f2c90a5a89e70b7a0947da63c6c2c4b6e": true,
+    "db9f0200bde9042da44ee6cb71f5e08784e38b49db3b2f91f425b37b167e5365": true,
+    "cf0a14cc2a58b5846b9f6784794b81ac44f109e5ba626eda53c1bbf942d103a5": true,
+    "d05870d8b0d90ca9d3a4c49365b68365808480981cd7e30b3c8ec9d0e3a6de36": true,
+    "3203fee7f2ddfb844a7a3f2eecf893e98da0edc4e18ee9c4703490f7bba41451": true,
+    "74a78216c7f6b095278b21a82538296c24f19d8e07251d0fec0541470e473af0": true,
+    "8f9afc7533de21dba9db50cc48f8389f2f4e8c7124a41742b85bd1afc64e9660": true,
+    "c1c620a2343ab0c9f539ef03c76d276a775580b9e7f5772de23e03d64d68bedb": true,
+    "852c5743edb661001ee48b432c5db78fdbeba2b59ea8fde7e6f8ff595a979a36": true,
+    "69c8a2fb2b060313c18e8bbf4f0c26b3873a2ef7c41507047c3a1e395ed55efd": true,
+    "f8fe7e6cd3408acc69776d3c02bac6a5124158ea9dce36b19de656ddeb44b457": true,
+    "60fe98e2c24832de9bb9c1a6138d6d9f7d6c6fa66713a7ed11f17f2e8a583479": true,
+    "712f8a332dbb4049c752da2c8442eee5762ba6bb1ee44ce08369cacf4322b2bb": true,
+    "fb92fe224b43fc51cd1f39de2aac19312b53f493cd278a8ddb0c58be87818b00": true,
+    "619fe0532d50363b967b51b647027aeebfb6cbba405044dc40d238e6bda5992f": true,
+    "f8467b6ab9e9f70c951f7232da2e0dc99d1c69197ad7dac263beb5e9a85529a5": true,
+    "6aad7f654e3bbaa9ff11baa6bbc3b939ad69c0b0b8794b3a671f65bd0d6bec2b": true,
+    "6d77694e5a8e9a1bd71c76f187031cf7fc9693596600aa4bddaafe35927aa6f4": true,
+    "e11c1e0977d3d3cb8cd11f541e04310e423e9c15a798e0a74c7e0df140f87505": true,
+    "99d44dc8a72e5efd5fdffe224837b6a0f0820b9beb077403ba32ab656ef20abc": true,
+    "7a242d401ecba752b282cc0cbfeb3948078628c53e646cb4e2dcadeace395b21": true,
+    "6c700dd24e23a0926a630d19407054e182d415fa75f37e02b9d35ecd56b8d04f": true,
+    "669aa9bc01a53a026aa4ea876928a5bd74fcb5489a696acf92927ec53884fa89": true,
+    "7b4bf838dd6e4fa0e68f7261b69c86b884508fa6848607da6e5415078c0c8dd9": true,
+    "609142cf628dcffc1fc2969df4ea017c9950f234896dbdfea9bf260c6daa1404": true,
+    "c0fc75084e687a9812fa6e7cfbdaf4d2d4e7b97c8a65638c602b4b33979a08a4": true,
+    "13a99afcfab90286186b9b58c86cae0893ec029da9a7250f6db8c27482ad885e": true,
+    "855a085f118022bb9bb083a6333e4539a0878a5e5c8cddc295054cbd3a3a529e": true,
+    "d9a0a6133d7a3c0eff3c09a4779773326a4506355527d4af21f2d81d62b7e19c": true,
+    "59d6ec375ada5b2d001f0b59e8391024d8eab7b72c804bc027edc6419435cf5c": true,
+    "aa6a20874896afa93a8bd07c77f918715eff1836ad8c21dabd14fb3b14895f33": true,
+    "cc3513e3e658b37b22e1f4dfe09937facf41411e6dd1f6e6f891576cc24fad6c": true,
+    "4f29488fc46c9106f85ad120d67f59400382e1f062a413a7279fe66a65312131": true,
+    "e3e8569b0f17a798a622ad60f56d106f5b9a5b86abd3a34798c331f6955db0e5": true,
+    "27ebfaf926b8f0deb4edf8aabcb6177a2bc0a58ac22ddd5187e5e926c5a6fb92": true,
+    "57d6c950bd0e5f785038a773c82e419b0eabcba2804901b8aaed7a5ec4d71be0": true,
+    "ca09432b9dd469fa2dc47e3f7922805b67be240cdf4bef747721771656a54567": true,
+    "b2d023cb4f76c92b893ba059720712c2f8f389884862a281e5a377957e14f701": true,
+    "465d599d114baa752082b789ac3a13d71a52a2dbfa0231c957e761e39bbd6340": true,
+    "8438b83ec09dc10c6afeadcea40656e355110262c5776b216762b49892c6abf8": true,
+    "5ecb64821d3373205c98ed6b8a4f891a62b518f93a4b8966c25750e29cc8b739": true,
+    "b48f90add0b047ed7f96d443b9490e45d06de2f7c0c12b08cf383f2d22a4ba21": true,
+    "b5d990b43e6313e197d88278189c71f0bdf02d485e6cdf4136f53498fcbdf99f": true,
+    "2b78785cd96879665b5776e8653b309075afd413acfda84160e43f64eabfe4eb": true,
+    "00386fb5ef04981f2abf8faa1b34e95b08f3ecec47fe2d8d0d8cf8ebe22ac315": true,
+    "de6b74ba54424a281249bc458496cf42c01d9d134c63930dd8aef28c67585904": true,
+    "e984ee332904fae4c0a89035d42d505cabd57b205c658691521b4c34b069bada": true,
+    "fcdb5071149815672f2865e7bd94ac188c198fffab240cd10e6fafc54e109000": true,
+    "450a810209271753fd7b994f1d5fcf5d4af98b7cae6f00eaa87ed09179b558d7": true,
+    "7bb3b7566f4067808ba861d4e2d03e738e715a5bd540828be0b44a5ebeff0089": true,
+    "1d954f4f54937286a525f04870da58d1ca85534f0f295e9d6e01b774b80c9241": true,
+    "40244a4b966735c14d025d6ab9fed16cbbd2f867855506018236503f004b1dac": true,
+    "ec4312ceecfe7244b3019237a2b40b55dda848a6eaf4c2a0b4e1014cb2021dd3": true,
+    "97fa0dfb2b4ce0ab96d341fdd97b49eaef3f7b89e7aeef456db3171cd7f3a951": true,
+    "d3c5abbcd2933309af368e15d51ac0bdd6357d1411f03b93150b63481170b027": true,
+    "71687500942bc28477fd9d2a1ef4d30ba0803cd55fa90b333408138e7bafb8e8": true,
+    "b838801bd923f0e2c5964cbe9edd84958ed0fea2c8731d44fa8fb260d88722cb": true,
+    "e61e62a93638f315d33431b003331471a9b5ff3c2291efe6277b1efe4a3190ef": true,
+    "d01b73c0d8faced880fff8f9a689fb22bd831148c627ddf1a32f72b75530c089": true,
+    "f708e298ce8943d9f2f55b430323431cdbefd785e538ff94cb83a75eff005928": true,
+    "077a061e0432f44238be21e3b0a9d932a9a0082d4e502a292113f40f575921c0": true,
+    "7615ee6df2659ff5b528fb4eb585a56d87d53009f63bce013d79df63b29a203b": true,
+    "70c69b0a81f5c13b37844e93ad4afa11fed8ab824ef27f07ae1443d2353d7681": true,
+    "62ba4de27f784c42b0e144be2b0d00e2d2ba3877becaaec642f5f665b844362c": true,
+    "8d6b41423fc4281ee0cff29eb820700509a12311e594381feb2264d23dbc26bf": true,
+    "7a7a3cae6d34f97839f207d407306b45b6c9660f7c395ce700b8616cee9f63f7": true,
+    "4c81689abe9a80b3dc6dcea8945388194a9ff7f24e5f6aba58bdb5a526266a15": true,
+    "fa0d803e5e0d112d327bebd6b001ddfcba8b4e775f8cdb432ca3ecf1af5fcf3a": true,
+    "6849f0c998804e0863d8e1022daaab67e8f30baf6402bed1312a578987259f90": true,
+    "ae2782b3fd25678e5d701ee4f06946098fc50003d545f8dbe1c12a7e64f7d2a0": true,
+    "ded327796bc6926b3b5236f9fe6d6a00d64f53da979c68c20a3a786ea47a37b5": true,
+    "c7b7a57feef93b06d5d218be04e58238971a06e4f285737e09912d144d9455b7": true,
+    "443f41a07a45e0fa788d66cadea6bfa9eb042d34f4d5f9dd48883a94c85aef72": true,
+    "bbbc79820834fc630373474f4e272e7b787a1ed8cb59329cfb0af781fa82ba7c": true,
+    "96b0f2775412df7ed023509bd214db6e12b5e1376a2e6f567b707eb26278e8b4": true,
+    "75185eb30c16446d13c9218126e3290818e6187fd1dc78b054b1d1a17325849f": true,
+    "6aa965ce0cb9c2d087475bd207d50a3626d98dae8eb8b4544e4c3d0a3eead6c9": true,
+    "1dbc8f80f36e1a891aaeb7bfdff25c561748c54c16513c61631ea2e2d6ca12d2": true,
+    "d5a177879443261225fc21a4a8e4c1f70d87463573710599ff3f582e1e0f28c0": true,
+    "1a9bc634fc45da8d2c54f9ae86f801fb0d3025134ee4135b28721861af8506a5": true,
+    "6aa8ee9106248f5731f415ca43fe897f26a93d5ed9658ae704c99bce56d776f8": true,
+    "6f9844cc06aaf961acc127c1cf6a980a97937e28ec1feb5799def066e666f525": true,
+    "23f967817214ac1fee10a8744cb9eec06b3758eac8c189647b185429aaf8ad7f": true,
+    "40b3cb8c0c574cef952ef73a0fa6f011c18f2d0c2810d6f5d4040b6c6d4fe1ce": true,
+    "6da3e2a12b943bd9caeb5a0bc6f7384844382363f827a772605eb4e04bf599b4": true,
+    "62c84e43b6ba111b20cc94dc2bbb9c2fc1ba5b75e4f1818f5f9884a6b99c2868": true,
+    "c53ec475c46ea3cc99a6149a1892115c128f5daa2cbb5738f32951f31d36e7d6": true,
+    "40ca595b80634cc480018b01d549cab80f0d708f15a14bc8704365b5c3075b7b": true,
+    "9739d423b0666d91afc53a197ccb41488dd2f5f7cae5d801258fae401ad8963a": true,
+    "789dc484133b37b4f15fd6122824ee42e128d8b600f79ece8f07419733168db0": true,
+    "d309bd8915ef71b5b584421bde3e9a67dd6e802525e230b8e4a631a77558d283": true,
+    "aa90dc96a5a5bc2f6e3c797dc89f704a80fea1a9833654da3e7f71bed573902a": true,
+    "6b529fb0bfdb7c26ec5bdca6573bc3d1ece3453bd83e181cbd0dbc974a47e699": true,
+    "aa27d6d70407c8dffa028225186c94d79c2b9c63aaa07ee0dab3010034c28a0a": true,
+    "757b512f289611408b362ad5b4869038b666bb9f471fcdca0418ac0554a97625": true,
+    "0e002691e25fdcc1cde863879bae9ccdf41ba516a49875143350c9e6dd92d3c1": true,
+    "a5104582d78399cd86269547736de0eb3fd27f040b08b75d1820579922affb39": true,
+    "fc5bf269b7644f715e93f898208a54aa949ca5866a62bb56fd9bb083a3541e88": true,
+    "abdd526094de3086e4ad7a3709da242cf93aa9567c7ecfbe178ea7a68862fb9d": true,
+    "81c616591251f0a223e843ba3f763da505201e3addacd0524cd370e79874f4b1": true,
+    "956de3c242d7af324fed523b0ff2716c218aa5e0b02af47c90c87aec06341e5f": true,
+    "1da5948b09dd5d268fdde35e591a7e042bbf35c45d4b2a4b3ab5c9bbfcf88d35": true,
+    "7578c407b199d8ae86ee2c7ce80bb01bbe0f47a80b83d4093923b941c1d18f82": true,
+    "22f4d611f283c6aee5260793115163382d8057530036156644afcc7b7b4bb66f": true,
+    "377bb80a52e3a727df9965d0344f63492bb29c01f833a26b94a2d3b60c1fc1f3": true,
+    "4fc60b5a7ca943c2d27f7310e9f206009473e6bbf98539e8c745ad983f0ef633": true,
+    "1a4f8d575c7a7df7920b773cf48a4a5a364987ec7c9e284a260e5dd2a7c7ee46": true,
+    "1abe4a12d9675a564061ee0d46e367fa17f0695e54b737d8f8669e433fe3bf8c": true,
+    "8ab968979c7f582a4fad239f573aa1a147f044fed4f1dea04b274fac1b1339a5": true,
+    "6cdcc8891f7badb05834c38b518e4a50e73d364d9dd15b064e20dd2560758b2a": true,
+    "fba0502218ce939e8813d0425ae2ca0b5ec8091924edf8d70684dc6ba4d79483": true,
+    "e87fa6ad42ef57e993849714f0d26a05632dd64a61c25aa8f17e4bc50cac2c54": true,
+    "86a2b20e729d7cf24f692f10e80dfbeea4096bf342d261cc0fc5358aac440a04": true,
+    "919fd6ef8ee49456320c38d5489196f2bf37973ac0db21eb5a1d2bfa25e25906": true,
+    "f40863fddf497d1c7607e1f6af8a03e486165d36dad85dcdfe66394127c6be16": true,
+    "2f07f28870f053105e57e1efebaedbc2917c25c5eee7aa97bb1f47c48683fe6a": true,
+    "de013fe7a046b373d058f824e1c6df0676f47bb337bd5f8d738be47258d7bc8b": true,
+    "7c0cc84b844d71efaa3e51a2e0aacd25cbcceae0bf114bfc2fc7077ab9dade01": true,
+    "f1b8c9706b2ed0837dcb9cf2a8763889be43f07a42832ab87ad803e513a9744f": true,
+    "3811c83fe930ca3fd6dc8dd92b2866cb881acf5a15fafce57d16cacfc2c12fdd": true,
+    "ab66299e87733786e3db098980ea31123b769fa1b0181610d80f67d36d8235a8": true,
+    "1ae3d22559d5368ba3711cd381500d47be0b0116414a9ea3c01235a455d2ee9a": true,
+    "feb4161efebffaffa082320e77a42f06f4c20861bb4a188a42eb2b831fd9b031": true,
+    "4257ec45374ecf39f0a637216e3f7d94b43eff14cc646888f45db25f66a02aa1": true,
+    "ae97cd993a0619c94037c5c851e8ae1166f6ffbed910d76ecc8a88b9e70910e1": true,
+    "07d7e488813cc1c152b55141134cd7524602dbd7028b5477b30a8366593017fd": true,
+    "1da7d59a2b0b7d1ec39b1a7dd858b33dd38ac66dc058899282e52beb1d29971e": true,
+    "84e9dbf63d4410a07e15b50ffa9941318042cada13b12a7200acc3247179cc34": true,
+    "62380a0358ac887b9932e232e8bd0240d73a3c9a86f125e7d72c671f8be70c80": true,
+    "b7dd26c999dcb7231d35d7eca867982d49c2c6e7de1a0574255c544c858e299f": true,
+    "3e6dc190349d85ad04f7414b6fed029cff0c5477342a6b2ee5a9209191441a20": true,
+    "f705b526edb686df5c9153804e57f9f2a2fa4f8c633f8b68139471fb2142b681": true,
+    "9dab8ea20687c9fc82ecfd3d298944cd7c07d0e5fd3c22d339412558e86962dd": true,
+    "08a5c84b34b0c05a17ca4a2bb02415cb6ee5342bed48e948848dc07b5d8cf779": true,
+    "3f58b026df9e34c0ae14c3ec748d6fb885d4ab8018cca001892340829eff8f43": true
+  },
+  "admins": []
+}

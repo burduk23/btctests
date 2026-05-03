@@ -9,6 +9,7 @@ class Address(TypedDict):
     id: str
     addr: str
     notify_disabled: bool
+    confirmations: int
 
 class Group(TypedDict):
     id: str
@@ -29,7 +30,7 @@ class UnconfirmedTx(TypedDict):
 class StateData(TypedDict):
     users: Dict[str, UserData]
     unconfirmed: Dict[str, UnconfirmedTx]
-    notified_confirmed: Dict[str, bool]
+    notified_confirmed: Dict[str, Any]
     admins: List[str]
 
 def load_state() -> StateData:
@@ -50,6 +51,14 @@ def load_state() -> StateData:
         for key in default_state:
             if key not in data:
                 data[key] = default_state[key]
+        
+        # Ensure confirmations field exists in all addresses
+        for user_data in data.get("users", {}).values():
+            for group in user_data.get("groups", []):
+                for addr in group.get("addresses", []):
+                    if "confirmations" not in addr:
+                        addr["confirmations"] = 1
+                        
         return data # type: ignore
     except Exception as e:
         logger.error(f"Ошибка при загрузке state.json: {e}")

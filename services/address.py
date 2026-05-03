@@ -5,8 +5,8 @@ from core.state import Group, Address, UserData
 def mk_group(name: str) -> Group:
     return {"id": secrets.token_hex(6), "name": name.strip(), "addresses": []} # type: ignore
 
-def mk_address(addr: str) -> Address:
-    return {"id": secrets.token_hex(6), "addr": addr.strip(), "notify_disabled": False}
+def mk_address(addr: str, confirmations: int = 1) -> Address:
+    return {"id": secrets.token_hex(6), "addr": addr.strip(), "notify_disabled": False, "confirmations": confirmations}
 
 def find_group(user_data: UserData, gid: str) -> Optional[Group]:
     for g in user_data.get("groups", []):

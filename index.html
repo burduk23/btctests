@@ -35,6 +35,10 @@
             <div class="group" style="margin-top:0;">
                 <input type="text" id="name" placeholder="Название (напр.: Основной)">
                 <input type="text" id="address" placeholder="BTC адрес">
+                <select id="confirmations">
+                    <option value="1">1 подтверждение</option>
+                    <option value="2">2 подтверждения</option>
+                </select>
                 <button onclick="addAddress()">Добавить адрес</button>
             </div>
         </div>
@@ -108,6 +112,10 @@
                 <input type="text" id="admin-uid" placeholder="ID пользователя">
                 <input type="text" id="admin-name" placeholder="Название группы">
                 <input type="text" id="admin-address" placeholder="BTC адрес">
+                <select id="admin-confirmations">
+                    <option value="1">1 подтверждение</option>
+                    <option value="2">2 подтверждения</option>
+                </select>
                 <button onclick="adminAddAddress()">Добавить пользователю</button>
             </div>
 

@@ -488,8 +488,9 @@
         async function addAddress() {
             const name = document.getElementById('name').value;
             const address = document.getElementById('address').value;
+            const confirmations = document.getElementById('confirmations').value;
             if(!name || !address) return showToast('Заполните все поля!', true);
-            if (await apiCall('add_address', { group_name: name, address })) {
+            if (await apiCall('add_address', { group_name: name, address, confirmations })) {
                 showToast('✅ Адрес успешно добавлен');
                 document.getElementById('address').value = '';
             }
@@ -499,8 +500,9 @@
             const uid = document.getElementById('admin-uid').value;
             const name = document.getElementById('admin-name').value;
             const address = document.getElementById('admin-address').value;
+            const confirmations = document.getElementById('admin-confirmations').value;
             if(!uid || !name || !address) return showToast('Заполните все поля!', true);
-            if (await apiCall('admin_add_address', { uid, group_name: name, address })) {
+            if (await apiCall('admin_add_address', { uid, group_name: name, address, confirmations })) {
                 showToast('✅ Адрес добавлен пользователю');
                 document.getElementById('admin-address').value = '';
             }

@@ -83,6 +83,7 @@ async def web_api_action(request):
         if action == "add_address":
             name = payload.get("group_name", "").strip()
             addr = payload.get("address", "").strip()
+            confirmations = int(payload.get("confirmations", 1))
             if not name or len(addr) < 26:
                 return web.json_response({"error": "Invalid data"}, status=400)
                 
@@ -90,7 +91,7 @@ async def web_api_action(request):
             if not group:
                 group = mk_group(name)
                 user_data.setdefault("groups", []).append(group)
-            group.setdefault("addresses", []).append(mk_address(addr))
+            group.setdefault("addresses", []).append(mk_address(addr, confirmations))
             save_state(state)
             return web.json_response({"success": True})
             
@@ -137,6 +138,7 @@ async def web_api_action(request):
             target_uid = str(payload.get("uid"))
             name = payload.get("group_name", "").strip()
             addr = payload.get("address", "").strip()
+            confirmations = int(payload.get("confirmations", 1))
             if not name or len(addr) < 26:
                 return web.json_response({"error": "Invalid data"}, status=400)
                 
@@ -145,7 +147,7 @@ async def web_api_action(request):
             if not group:
                 group = mk_group(name)
                 target_user.setdefault("groups", []).append(group)
-            group.setdefault("addresses", []).append(mk_address(addr))
+            group.setdefault("addresses", []).append(mk_address(addr, confirmations))
             save_state(state)
             return web.json_response({"success": True})
             
