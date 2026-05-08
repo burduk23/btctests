@@ -13,7 +13,14 @@ logger = logging.getLogger("btc_notify")
 
 def main():
     logger.info("Инициализация бота...")
-    app = ApplicationBuilder().token(config.BOT_TOKEN).build()
+    builder = ApplicationBuilder().token(config.BOT_TOKEN)
+    
+    if config.PROXY_URL:
+        logger.info(f"Использование SOCKS5 прокси: {config.PROXY_URL}")
+        builder.proxy(config.PROXY_URL)
+        builder.get_updates_proxy(config.PROXY_URL)
+        
+    app = builder.build()
 
     # Регистрация обработчиков
     app.add_handler(CommandHandler("start", cmd_start))

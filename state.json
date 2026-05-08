@@ -9,18 +9,8 @@
             {
               "id": "c502cf16960d",
               "addr": "bc1q4y99k4t5wxgyph6acfuup0q6zswz4zlz9kmudk",
-              "notify_disabled": false
-            }
-          ]
-        },
-        {
-          "id": "bc5ad46095c0",
-          "name": "Bs",
-          "addresses": [
-            {
-              "id": "e388c9d47955",
-              "addr": "bc1qr9wcrgqd6u8da9hs9mr85p54kns0gzy3mmlcsh",
-              "notify_disabled": false
+              "notify_disabled": false,
+              "confirmations": 1
             }
           ]
         },
@@ -31,7 +21,8 @@
             {
               "id": "db9d3f96f90d",
               "addr": "bc1qg3tytftc68jtrgy6exqgr5w75aadtcpmkzy33w",
-              "notify_disabled": false
+              "notify_disabled": false,
+              "confirmations": 1
             }
           ]
         },
@@ -42,18 +33,8 @@
             {
               "id": "6600f5604015",
               "addr": "bc1qhdmmct9d4fwgsgugjrcpmse5yunr8sauvljc8l",
-              "notify_disabled": false
-            }
-          ]
-        },
-        {
-          "id": "2b308bce1dd2",
-          "name": "bc1q9jel7sjcgvrgnjy6vjaukxctl4umtqdmtrhw9n",
-          "addresses": [
-            {
-              "id": "690a58c826bf",
-              "addr": "bc1q9jel7sjcgvrgnjy6vjaukxctl4umtqdmtrhw9n",
-              "notify_disabled": false
+              "notify_disabled": false,
+              "confirmations": 1
             }
           ]
         }
@@ -70,7 +51,8 @@
             {
               "id": "34f791ba9e20",
               "addr": "bc1qhdmmct9d4fwgsgugjrcpmse5yunr8sauvljc8l",
-              "notify_disabled": false
+              "notify_disabled": false,
+              "confirmations": 1
             }
           ]
         }
@@ -229,7 +211,41 @@
     "f705b526edb686df5c9153804e57f9f2a2fa4f8c633f8b68139471fb2142b681": true,
     "9dab8ea20687c9fc82ecfd3d298944cd7c07d0e5fd3c22d339412558e86962dd": true,
     "08a5c84b34b0c05a17ca4a2bb02415cb6ee5342bed48e948848dc07b5d8cf779": true,
-    "3f58b026df9e34c0ae14c3ec748d6fb885d4ab8018cca001892340829eff8f43": true
+    "3f58b026df9e34c0ae14c3ec748d6fb885d4ab8018cca001892340829eff8f43": true,
+    "592c8d03425539edf7c32c17309ef3ba14d1923926969a2b4110ec06a126e6d1": {
+      "5381999598": [
+        "target"
+      ]
+    },
+    "dfa1f3e5186dd6ac80547d838350da17280972a72c2ee6301af437814cd3a38b": {
+      "5381999598": [
+        "target"
+      ],
+      "8283493551": [
+        "target"
+      ]
+    },
+    "b4dc0a63c747db99108bfe753b04d7df0a295fe71d5f8a4e30778481379e1364": {
+      "5381999598": [
+        "0",
+        "target"
+      ]
+    },
+    "7771bd59775300ec7e0f2c0592fbcc51366be6b183247e954e02ccfdc3b135b8": {
+      "5381999598": [
+        "target"
+      ]
+    },
+    "3fdb84f935f9fd416225fd67f7a4b0adc623be0b6684a3897150bf62ddd72610": {
+      "5381999598": [
+        "target"
+      ]
+    },
+    "66be18af0e201ba473487a22658782a006c03a5c02921d2a24eedc5a61970647": {
+      "5381999598": [
+        "target"
+      ]
+    }
   },
   "admins": []
 }

@@ -5,6 +5,7 @@ from core.config import config
 from bot.markups import main_menu_markup, groups_list_markup, group_view_markup, cancel_markup, admin_panel_markup, admin_broadcast_menu_markup, admin_user_markup, admin_addr_markup, admin_manage_admins_markup
 from bot.handlers import update_menu, remove_menu_only, remove_prompt
 from services.address import find_group, find_address, mk_group, mk_address
+from services.monitoring import initialize_address
 import logging
 
 logger = logging.getLogger("btc_notify")
@@ -134,6 +135,7 @@ async def callback_router(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
                 group = mk_group(name)
                 target_user.setdefault("groups", []).append(group) # type: ignore
             group.setdefault("addresses", []).append(mk_address(addr, confirmations)) # type: ignore
+            await initialize_address(state, addr, target_uid)
             save_state(state)
             ctx.chat_data.pop("flow", None) # type: ignore
             await remove_prompt(ctx, chat_id)
@@ -146,6 +148,7 @@ async def callback_router(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             group = find_group(user_data, gid) # type: ignore
             if group:
                 group.setdefault("addresses", []).append(mk_address(addr, confirmations)) # type: ignore
+                await initialize_address(state, addr, user_id)
                 save_state(state)
                 ctx.chat_data.pop("flow", None) # type: ignore
                 await remove_prompt(ctx, chat_id)
@@ -162,6 +165,7 @@ async def callback_router(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
                 group = mk_group(name)
                 user_data.setdefault("groups", []).append(group) # type: ignore
             group.setdefault("addresses", []).append(mk_address(addr, confirmations)) # type: ignore
+            await initialize_address(state, addr, user_id)
             save_state(state)
             ctx.chat_data.pop("flow", None) # type: ignore
             await remove_prompt(ctx, chat_id)

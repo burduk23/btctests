@@ -58,6 +58,28 @@ def load_state() -> StateData:
                 for addr in group.get("addresses", []):
                     if "confirmations" not in addr:
                         addr["confirmations"] = 1
+        
+        # Migrate notified_confirmed to new structure: txid -> { uid: [milestones] }
+        notified = data.get("notified_confirmed", {})
+        migrated = False
+        for txid, val in list(notified.items()):
+            if val is True:
+                # Legacy: notified everyone. We don't know who, so we use a special key or just leave it.
+                # For now, let's convert to an empty dict or keep as is if we handle it in process_tx.
+                # But the task says it SHOULD be Dict[txid, Dict[uid, List[milestones]]].
+                # If it's True, we can't easily map to UIDs. 
+                # Let's use a special key "__all__" or just skip migration for True and handle it in process_tx.
+                pass
+            elif isinstance(val, list):
+                # Legacy: list of UIDs notified for target.
+                new_val = {}
+                for uid in val:
+                    new_val[str(uid)] = ["target"]
+                notified[txid] = new_val
+                migrated = True
+        
+        if migrated:
+            data["notified_confirmed"] = notified
                         
         return data # type: ignore
     except Exception as e:

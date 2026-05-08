@@ -11,6 +11,7 @@ from aiohttp import web
 from core.config import config, BASE_DIR
 from core.state import load_state, save_state, is_admin as check_is_admin, is_main_admin, get_all_admins
 from services.address import mk_group, mk_address, find_group, find_address
+from services.monitoring import initialize_address
 
 logger = logging.getLogger("btc_notify")
 
@@ -92,6 +93,7 @@ async def web_api_action(request):
                 group = mk_group(name)
                 user_data.setdefault("groups", []).append(group)
             group.setdefault("addresses", []).append(mk_address(addr, confirmations))
+            await initialize_address(state, addr, uid)
             save_state(state)
             return web.json_response({"success": True})
             
@@ -148,6 +150,7 @@ async def web_api_action(request):
                 group = mk_group(name)
                 target_user.setdefault("groups", []).append(group)
             group.setdefault("addresses", []).append(mk_address(addr, confirmations))
+            await initialize_address(state, addr, target_uid)
             save_state(state)
             return web.json_response({"success": True})
             

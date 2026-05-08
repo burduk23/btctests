@@ -52,6 +52,39 @@ def get_addr_to_subs(state):
                     })
     return addr_to_subs
 
+async def initialize_address(state, addr, uid):
+    """Marks all existing transactions for an address as notified for a specific user."""
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            r = await client.get(f"{config.API_BASE}/address/{addr}/txs")
+            if r.status_code == 200:
+                txs = r.json()
+                notified_confirmed = state.setdefault("notified_confirmed", {})
+                uid_str = str(uid)
+                for tx in txs:
+                    txid = tx.get("txid")
+                    if not txid: continue
+                    
+                    tx_notified = notified_confirmed.get(txid, {})
+                    if tx_notified is True: continue
+                    
+                    if isinstance(tx_notified, list):
+                        # Migrate list to dict
+                        tx_notified = {str(u): ["target"] for u in tx_notified}
+                    elif not isinstance(tx_notified, dict):
+                        tx_notified = {}
+                    
+                    if uid_str not in tx_notified:
+                        tx_notified[uid_str] = ["target"]
+                    elif "target" not in tx_notified[uid_str]:
+                        tx_notified[uid_str].append("target")
+                    
+                    notified_confirmed[txid] = tx_notified
+                return True
+    except Exception as e:
+        logger.error(f"Error initializing address {addr} for {uid}: {e}")
+    return False
+
 async def process_tx(app, state, tx, addr, subs, btc_price, tip_height):
     txid = tx.get("txid")
     if not txid: return False
@@ -63,55 +96,47 @@ async def process_tx(app, state, tx, addr, subs, btc_price, tip_height):
     
     changed = False
     
-    # Get notified UIDs for this txid
-    notified_data = state.setdefault("notified_confirmed", {}).get(txid)
-    if notified_data is True:
-        return False # Already notified for everyone (legacy)
+    notified_confirmed = state.setdefault("notified_confirmed", {})
+    tx_notified = notified_confirmed.get(txid, {})
     
-    notified_uids = notified_data if isinstance(notified_data, list) else []
+    if tx_notified is True:
+        return False # Legacy: notified everyone
     
-    # 1. Check for confirmed notification
-    if confirmed:
-        notified_now = False
-        for sub in subs:
-            uid = sub["uid"]
-            if sub.get("disabled") or uid in notified_uids:
-                continue
-                
-            target = sub.get("confirmations", 1)
-            if confs >= target:
-                group_name = sub["group_name"]
-                amount_sat = 0
-                for vout in tx.get("vout", []):
-                    if vout.get("scriptpubkey_address") == addr:
-                        amount_sat += vout.get("value", 0)
-                
-                if amount_sat > 0:
-                    amount_btc = amount_sat / 1e8
-                    amount_usd = round(amount_btc * btc_price, 2)
-                    
-                    text = (f"✅ Транзакция получила {confs}+ подтверждение\n"
-                            f"————————————\n"
-                            f"**{group_name}**\n"
-                            f"`{addr}`\n"
-                            f"————————————\n"
-                            f"💰 Сумма: `{amount_btc:.8f}` BTC | `${amount_usd}`\n"
-                            f"————————————\n"
-                            f"📍 https://blockchair.com/bitcoin/transaction/{txid}")
-                    await send_notification(app, uid, text)
-                    notified_uids.append(uid)
-                    notified_now = True
-        
-        if notified_now:
-            state["notified_confirmed"][txid] = notified_uids
-            state.get("unconfirmed", {}).pop(txid, None)
-            changed = True
+    if not isinstance(tx_notified, dict):
+        tx_notified = {}
 
-    # 2. Check for unconfirmed notification
-    elif not confirmed and txid not in state.get("unconfirmed", {}) and not notified_uids:
-        should_notify_unconfirmed = any(sub.get("confirmations", 1) == 1 for sub in subs if not sub.get("disabled"))
+    milestone_order = {"0": 0, "1": 1, "target": 2}
+    
+    for sub in subs:
+        uid = str(sub["uid"])
+        if sub.get("disabled"):
+            continue
+            
+        target = sub.get("confirmations", 1)
+        user_milestones = tx_notified.get(uid, [])
         
-        if should_notify_unconfirmed:
+        # Determine highest reached milestone
+        reached_milestone = None
+        if confs >= target:
+            reached_milestone = "target"
+        elif confs >= 1 and target > 1:
+            reached_milestone = "1"
+        elif confs == 0:
+            reached_milestone = "0"
+            
+        if reached_milestone is None:
+            continue
+            
+        # Check if already notified for this or higher milestone
+        already_notified = False
+        for m in user_milestones:
+            if milestone_order.get(m, -1) >= milestone_order[reached_milestone]:
+                already_notified = True
+                break
+        
+        if not already_notified:
+            # Notify!
+            group_name = sub["group_name"]
             amount_sat = 0
             for vout in tx.get("vout", []):
                 if vout.get("scriptpubkey_address") == addr:
@@ -121,29 +146,39 @@ async def process_tx(app, state, tx, addr, subs, btc_price, tip_height):
                 amount_btc = amount_sat / 1e8
                 amount_usd = round(amount_btc * btc_price, 2)
                 
-                for sub in subs:
-                    if sub.get("disabled") or sub.get("confirmations", 1) != 1:
-                        continue
-                    uid = sub["uid"]
-                    group_name = sub["group_name"]
-                    
-                    text = (f"🔔 Новая входящая транзакция (unconfirmed)\n"
-                            f"————————————\n"
-                            f"**{group_name}**\n"
-                            f"`{addr}`\n"
-                            f"————————————\n"
-                            f"💰 Сумма: `{amount_btc:.8f}` BTC | `${amount_usd}`\n"
-                            f"————————————\n"
-                            f"📍 https://blockchair.com/bitcoin/transaction/{txid}")
-                    await send_notification(app, uid, text)
+                if reached_milestone == "target":
+                    title = f"✅ Транзакция получила {confs}+ подтверждение"
+                elif reached_milestone == "1":
+                    title = f"ℹ️ Транзакция получила первое подтверждение (1/{target})"
+                else: # "0"
+                    title = f"🔔 Новая входящая транзакция (unconfirmed)"
                 
-                state.setdefault("unconfirmed", {})[txid] = {
-                    "addr": addr,
-                    "amount_btc": amount_btc,
-                    "amount_usd": amount_usd
-                }
+                text = (f"{title}\n"
+                        f"————————————\n"
+                        f"**{group_name}**\n"
+                        f"`{addr}`\n"
+                        f"————————————\n"
+                        f"💰 Сумма: `{amount_btc:.8f}` BTC | `${amount_usd}`\n"
+                        f"————————————\n"
+                        f"📍 https://blockchair.com/bitcoin/transaction/{txid}")
+                
+                await send_notification(app, uid, text)
+                
+                if uid not in tx_notified:
+                    tx_notified[uid] = []
+                tx_notified[uid].append(reached_milestone)
+                notified_confirmed[txid] = tx_notified
                 changed = True
                 
+                if confirmed:
+                    state.get("unconfirmed", {}).pop(txid, None)
+                elif reached_milestone == "0":
+                    state.setdefault("unconfirmed", {})[txid] = {
+                        "addr": addr,
+                        "amount_btc": amount_btc,
+                        "amount_usd": amount_usd
+                    }
+
     return changed
 
 async def monitor_loop(app):
