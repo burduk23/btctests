@@ -4,88 +4,81 @@ import logging
 import json
 import aiohttp
 import time
+import os
+from telegram.error import Forbidden
 from core.config import config
-from core.state import load_state, save_state, get_all_admins
+from core.state import get_address_to_subs, get_notified_confs, update_notified_confs, update_user_blocked
 
 logger = logging.getLogger("btc_notify")
 
-async def get_btc_price():
+async def get_mempool_stats():
+    """Gets BTC price and tip height from mempool.space API."""
+    stats = {"price": 0, "height": 0}
     try:
         async with httpx.AsyncClient(timeout=5.0) as client:
-            r = await client.get("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd")
-            if r.status_code == 200:
-                return r.json()["bitcoin"]["usd"]
-    except:
-        pass
-    return 65000
+            # Get height
+            r_h = await client.get("https://mempool.space/api/blocks/tip/height")
+            if r_h.status_code == 200:
+                stats["height"] = int(r_h.text)
+            
+            # Get price
+            r_p = await client.get("https://mempool.space/api/v1/prices")
+            if r_p.status_code == 200:
+                stats["price"] = r_p.json().get("USD", 0)
+    except Exception as e:
+        logger.debug(f"Error fetching mempool stats: {e}")
+    return stats
 
 async def get_tip_height():
-    try:
-        async with httpx.AsyncClient(timeout=5.0) as client:
-            r = await client.get("https://mempool.space/api/blocks/tip/height")
-            if r.status_code == 200:
-                return int(r.text)
-    except:
-        pass
-    return 0
+    # Deprecated in favor of get_mempool_stats, but keeping for compatibility if needed
+    stats = await get_mempool_stats()
+    return stats["height"]
 
 async def send_notification(app, chat_id, text):
     try:
+        # Уведомления через Telegram ВСЕГДА идут через прокси, если он задан в приложении (app.bot)
+        # Здесь мы просто вызываем метод бота
         await app.bot.send_message(chat_id=int(chat_id), text=text, parse_mode="Markdown")
+        return True
+    except Forbidden:
+        logger.error(f"Бот заблокирован пользователем {chat_id}. Отключаем уведомления.")
+        await update_user_blocked(int(chat_id), True)
+        return False
     except Exception as e:
-        logger.debug(f"Не удалось отправить уведомление {chat_id}: {e}")
+        logger.error(f"Не удалось отправить уведомление {chat_id}: {e}")
+        return False
 
-def get_addr_to_subs(state):
-    addr_to_subs = {}
-    for uid, udata in state.get("users", {}).items():
-        for group in udata.get("groups", []):
-            for a_entry in group.get("addresses", []):
-                addr = a_entry.get("addr")
-                if addr:
-                    if addr not in addr_to_subs:
-                        addr_to_subs[addr] = []
-                    addr_to_subs[addr].append({
-                        "uid": uid,
-                        "group_name": group["name"],
-                        "disabled": a_entry.get("notify_disabled", False),
-                        "confirmations": a_entry.get("confirmations", 1)
-                    })
-    return addr_to_subs
-
-async def initialize_address(state, addr, uid):
+async def initialize_address(addr, uid):
     """Marks all existing transactions for an address as notified for a specific user."""
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             r = await client.get(f"{config.API_BASE}/address/{addr}/txs")
             if r.status_code == 200:
                 txs = r.json()
-                notified_confirmed = state.setdefault("notified_confirmed", {})
                 uid_str = str(uid)
                 for tx in txs:
                     txid = tx.get("txid")
                     if not txid: continue
                     
-                    tx_notified = notified_confirmed.get(txid, {})
-                    if tx_notified is True: continue
-                    
-                    if isinstance(tx_notified, list):
-                        # Migrate list to dict
-                        tx_notified = {str(u): ["target"] for u in tx_notified}
-                    elif not isinstance(tx_notified, dict):
-                        tx_notified = {}
-                    
-                    if uid_str not in tx_notified:
-                        tx_notified[uid_str] = ["target"]
-                    elif "target" not in tx_notified[uid_str]:
-                        tx_notified[uid_str].append("target")
-                    
-                    notified_confirmed[txid] = tx_notified
+                    notified = await get_notified_confs(txid)
+                    key = f"{uid_str}:{addr}"
+                    if key not in notified or "target" not in notified[key]:
+                        await update_notified_confs(txid, key, "target")
                 return True
     except Exception as e:
         logger.error(f"Error initializing address {addr} for {uid}: {e}")
     return False
 
-async def process_tx(app, state, tx, addr, subs, btc_price, tip_height):
+async def initialize_all_existing_addresses(app):
+    """Initializes all addresses in the database to prevent historical spam."""
+    logger.info("Starting global address initialization...")
+    addr_to_subs = await get_address_to_subs()
+    for addr, subs in addr_to_subs.items():
+        for sub in subs:
+            await initialize_address(addr, sub["uid"])
+    logger.info("Global address initialization complete.")
+
+async def process_tx(app, tx, addr, subs, btc_price, tip_height):
     txid = tx.get("txid")
     if not txid: return False
     
@@ -95,25 +88,18 @@ async def process_tx(app, state, tx, addr, subs, btc_price, tip_height):
     confs = (tip_height - block_height + 1) if confirmed and tip_height and block_height else (1 if confirmed else 0)
     
     changed = False
+    tx_notified = await get_notified_confs(txid)
     
-    notified_confirmed = state.setdefault("notified_confirmed", {})
-    tx_notified = notified_confirmed.get(txid, {})
-    
-    if tx_notified is True:
-        return False # Legacy: notified everyone
-    
-    if not isinstance(tx_notified, dict):
-        tx_notified = {}
-
     milestone_order = {"0": 0, "1": 1, "target": 2}
     
     for sub in subs:
         uid = str(sub["uid"])
-        if sub.get("disabled"):
+        if sub.get("disabled") or sub.get("bot_blocked"):
             continue
             
         target = sub.get("confirmations", 1)
-        user_milestones = tx_notified.get(uid, [])
+        key = f"{uid}:{addr}"
+        user_milestones = tx_notified.get(key, [])
         
         # Determine highest reached milestone
         reached_milestone = None
@@ -135,6 +121,14 @@ async def process_tx(app, state, tx, addr, subs, btc_price, tip_height):
                 break
         
         if not already_notified:
+            # SAFETY CHECK: If this is the FIRST time we see this TX and it's already 
+            # way past our target, just mark it as notified silently to avoid spamming history.
+            is_new_discovery = len(user_milestones) == 0
+            if is_new_discovery and reached_milestone == "target" and confs > (target + 10):
+                logger.info(f"Silently marking historical TX {txid} for {uid}")
+                await update_notified_confs(txid, key, reached_milestone)
+                continue
+
             # Notify!
             group_name = sub["group_name"]
             amount_sat = 0
@@ -162,22 +156,9 @@ async def process_tx(app, state, tx, addr, subs, btc_price, tip_height):
                         f"————————————\n"
                         f"📍 https://blockchair.com/bitcoin/transaction/{txid}")
                 
-                await send_notification(app, uid, text)
-                
-                if uid not in tx_notified:
-                    tx_notified[uid] = []
-                tx_notified[uid].append(reached_milestone)
-                notified_confirmed[txid] = tx_notified
-                changed = True
-                
-                if confirmed:
-                    state.get("unconfirmed", {}).pop(txid, None)
-                elif reached_milestone == "0":
-                    state.setdefault("unconfirmed", {})[txid] = {
-                        "addr": addr,
-                        "amount_btc": amount_btc,
-                        "amount_usd": amount_usd
-                    }
+                if await send_notification(app, uid, text):
+                    await update_notified_confs(txid, key, reached_milestone)
+                    changed = True
 
     return changed
 
@@ -185,15 +166,35 @@ async def monitor_loop(app):
     poll_interval = config.POLL_INTERVAL
     ws_url = "wss://mempool.space/api/v1/ws"
     
+    state = {
+        "btc_price": 65000,
+        "tip_height": 0,
+        "last_price_update": 0,
+        "ws_connected": False
+    }
+    
+    async def update_price_if_needed():
+        now = time.time()
+        if now - state["last_price_update"] > 300: # 5 minutes
+            stats = await get_mempool_stats()
+            if stats["price"]:
+                state["btc_price"] = stats["price"]
+                state["last_price_update"] = now
+            if stats["height"]:
+                state["tip_height"] = stats["height"]
+    
     async def ws_handler():
         while True:
             try:
                 async with aiohttp.ClientSession() as session:
                     async with session.ws_connect(ws_url) as ws:
                         logger.info("Mempool.space WS connected")
+                        state["ws_connected"] = True
                         
-                        state = load_state()
-                        addr_to_subs = get_addr_to_subs(state)
+                        # Request initial stats
+                        await update_price_if_needed()
+                        
+                        addr_to_subs = await get_address_to_subs()
                         if addr_to_subs:
                             await ws.send_json({"action": "want-address-tracking", "addresses": list(addr_to_subs.keys())})
                         await ws.send_json({"action": "want-blocks"})
@@ -202,70 +203,72 @@ async def monitor_loop(app):
                             if msg.type == aiohttp.WSMsgType.TEXT:
                                 data = json.loads(msg.data)
                                 
+                                if "block" in data:
+                                    state["tip_height"] = data["block"].get("height", state["tip_height"])
+                                    # Update price on every block
+                                    await update_price_if_needed()
+                                
                                 txs = []
                                 if "address-transaction" in data:
                                     txs = [data["address-transaction"]]
                                 elif "address-transactions" in data:
                                     txs = data["address-transactions"]
                                 
-                                if txs or "block" in data:
-                                    state = load_state()
-                                    addr_to_subs = get_addr_to_subs(state)
-                                    btc_price = await get_btc_price()
-                                    tip_height = await get_tip_height()
+                                if txs:
+                                    addr_to_subs = await get_address_to_subs()
+                                    if state["btc_price"] == 0:
+                                        await update_price_if_needed()
                                     
-                                    changed = False
                                     for tx in txs:
                                         for addr, subs in addr_to_subs.items():
-                                            # Check if addr is in vout
                                             is_relevant = False
                                             for vout in tx.get("vout", []):
                                                 if vout.get("scriptpubkey_address") == addr:
                                                     is_relevant = True
                                                     break
                                             if is_relevant:
-                                                if await process_tx(app, state, tx, addr, subs, btc_price, tip_height):
-                                                    changed = True
-                                    
-                                    if changed:
-                                        save_state(state)
+                                                await process_tx(app, tx, addr, subs, state["btc_price"], state["tip_height"])
                             elif msg.type in (aiohttp.WSMsgType.CLOSED, aiohttp.WSMsgType.ERROR):
                                 break
             except Exception as e:
                 logger.error(f"WS Error: {e}")
+            finally:
+                state["ws_connected"] = False
             
             await asyncio.sleep(10)
 
     # Start WS handler in background
     asyncio.create_task(ws_handler())
     
-    # Polling loop (Fallback and periodic check)
+    # Polling loop (STRICT FALLBACK ONLY)
     async with httpx.AsyncClient(timeout=10.0) as client:
         while True:
             try:
-                state = load_state()
-                addr_to_subs = get_addr_to_subs(state)
-                
-                if addr_to_subs:
-                    btc_price = await get_btc_price()
-                    tip_height = await get_tip_height()
+                # Only poll if WebSocket is DOWN
+                if not state["ws_connected"]:
+                    logger.info("WS is down, performing fallback polling...")
+                    addr_to_subs = await get_address_to_subs()
                     
-                    changed = False
-                    for addr, subs in addr_to_subs.items():
-                        try:
-                            r = await client.get(f"{config.API_BASE}/address/{addr}/txs")
-                            if r.status_code == 200:
-                                for tx in r.json():
-                                    if await process_tx(app, state, tx, addr, subs, btc_price, tip_height):
-                                        changed = True
-                        except Exception as e:
-                            logger.debug(f"Polling error for {addr}: {e}")
-                    
-                    if changed:
-                        save_state(state)
+                    if addr_to_subs:
+                        stats = await get_mempool_stats()
+                        if stats["price"]: state["btc_price"] = stats["price"]
+                        if stats["height"]: state["tip_height"] = stats["height"]
+                        
+                        for addr, subs in addr_to_subs.items():
+                            try:
+                                r = await client.get(f"https://mempool.space/api/address/{addr}/txs")
+                                if r.status_code == 200:
+                                    for tx in r.json():
+                                        await process_tx(app, tx, addr, subs, state["btc_price"], state["tip_height"])
+                            except Exception as e:
+                                logger.debug(f"Polling error for {addr}: {e}")
+                else:
+                    # WS is OK, just sleep and do nothing
+                    pass
             except asyncio.CancelledError:
                 break
             except Exception as e:
                 logger.exception(f"Error in polling loop: {e}")
             
             await asyncio.sleep(poll_interval)
+

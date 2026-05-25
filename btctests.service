@@ -1,0 +1,15 @@
+[Unit]
+Description=BTC Notification Bot and Web Server
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/btctests
+ExecStart=/root/btctests/venv/bin/python main.py
+Restart=always
+RestartSec=10
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target

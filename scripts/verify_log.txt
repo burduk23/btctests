@@ -1,0 +1,6 @@
+Users table columns:
+(0, 'id', 'INTEGER', 1, None, 1)
+(1, 'telegram_id', 'BIGINT', 1, None, 0)
+(2, 'username', 'VARCHAR(255)', 0, None, 0)
+(3, 'first_name', 'VARCHAR(255)', 0, None, 0)
+(4, 'bot_blocked', 'BOOLEAN', 0, '0', 0)

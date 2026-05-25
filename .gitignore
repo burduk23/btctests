@@ -7,3 +7,8 @@ config.json
 м.txt
 socks5.txt
 state.json
+.env
+.env.example
+/tests
+state.json
+state.json.bak
