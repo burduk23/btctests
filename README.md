@@ -11,50 +11,51 @@ Telegram-бот для мониторинга входящих транзакц�
 - **Telegram Mini App**: Современный веб-интерфейс для управления адресами и админ-панель (стиль Glassmorphism).
 - **Встроенный чат**: Прямая связь с администратором через Mini App.
 
-## Установка и запуск (Ubuntu)
+## Установка и запуск (Ubuntu / Root)
 
-Бот должен быть расположен в директории `/root/btctests`.
+Бот должен быть расположен в директории `/root/btctests`. Все команды ниже выполняются от пользователя **root**.
 
-1. Клонируйте репозиторий:
+1. **Подготовка директории и кода**:
    ```bash
    cd /root
    git clone https://github.com/ваш-репозиторий/btctests.git
    cd btctests
    ```
-2. Создайте виртуальное окружение и установите зависимости:
+
+2. **Создание окружения**:
    ```bash
    python3 -m venv venv
    ./venv/bin/pip install -r requirements.txt
    ```
 
-3. **Настройка конфигурации**:
-   Создайте файл `.env` в директории `/root/btctests`.
-
-   **Пример .env**:
+3. **Настройка конфигурации (.env)**:
+   Создайте файл настроек в папке бота:
+   ```bash
+   nano /root/btctests/.env
+   ```
+   **Пример содержимого .env**:
    ```env
-   # Обязательные параметры
-   BOT_TOKEN=ВАШ_ТЕЛЕГРАМ_ТОКЕН
+   # Токен вашего бота
+   BOT_TOKEN=8602458971:AAEAq69BTZmFJXlfjpY6Bk3HItURCwrmz4I
+   
+   # Ваш Telegram ID (для доступа к админ-панели)
    ADMIN_CHAT_ID=5381999598
    
    # Прокси (только для Telegram Bot API)
-   # Формат: IP:PORT:USER:PASS или IP:PORT
+   # Формат: IP:PORT:USER:PASS или IP:PORT (SOCKS5)
    PROXY=163.198.212.183:8000:1hmsGF:NTk265
    
-   # Веб-сервер для Mini App
+   # Настройки веб-сервера (для Mini App)
    WEB_PORT=8080
    WEBAPP_URL=https://ваш-домен.com/
-   
-   # Дополнительные настройки (по желанию)
-   POLL_INTERVAL=20
-   API_BASE=https://mempool.space/api
    ```
 
-4. **Автозапуск через Systemd (Рекомендуется)**:
-   Создайте файл сервиса:
+4. **Автозапуск бота (Systemd)**:
+   Для того чтобы бот работал постоянно и запускался после перезагрузки:
    ```bash
    nano /etc/systemd/system/btctests.service
    ```
-   Вставьте следующее содержимое:
+   Вставьте этот текст (пути уже настроены для `/root/btctests`):
    ```ini
    [Unit]
    Description=BTC Notification Bot and Web Server
@@ -72,32 +73,50 @@ Telegram-бот для мониторинга входящих транзакц�
    [Install]
    WantedBy=multi-user.target
    ```
-   Запустите и включите сервис:
+   Активируйте сервис:
    ```bash
    systemctl daemon-reload
    systemctl enable --now btctests.service
    ```
 
-5. **Настройка Cloudflare Tunnel для Mini App**:
-   Для работы Mini App необходим HTTPS. Cloudflare Tunnel позволяет опубликовать локальный порт 8080 без открытия портов наружу.
+5. **Настройка Cloudflare Tunnel (HTTPS для Mini App)**:
+   Cloudflare Tunnel позволяет безопасно вывести порт 8080 в интернет с SSL сертификатом.
 
-   **Шаг 1. Установка и логин**:
+   **Шаг 1. Установка бинарного файла**:
+   Мы скачиваем файл в `/usr/local/bin`, чтобы команда `cloudflared` была доступна глобально в системе, независимо от того, в какой папке вы находитесь.
    ```bash
    wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -O /usr/local/bin/cloudflared
    chmod +x /usr/local/bin/cloudflared
-   cloudflared tunnel login
    ```
 
-   **Шаг 2. Создание туннеля**:
+   **Шаг 2. Авторизация**:
+   ```bash
+   cloudflared tunnel login
+   ```
+   *(Перейдите по ссылке в консоли и выберите ваш домен)*.
+
+   **Шаг 3. Создание туннеля**:
    ```bash
    cloudflared tunnel create btcbot
+   ```
+   Запомните ID туннеля (длинный код из букв и цифр).
+
+   **Шаг 4. Настройка DNS**:
+   ```bash
    cloudflared tunnel route dns btcbot ваш-домен.com
    ```
 
-   **Шаг 3. Конфигурация (/etc/cloudflared/config.yml)**:
+   **Шаг 5. Редактирование конфига Cloudflare**:
+   Создайте папку для конфига и откройте редактор:
+   ```bash
+   mkdir -p /etc/cloudflared
+   nano /etc/cloudflared/config.yml
+   ```
+   **Важно: Вставьте этот текст, заменив `ID_ТУННЕЛЯ` и `ваш-домен.com`**:
    ```yaml
    tunnel: btcbot
-   credentials-file: /root/.cloudflared/ВАШ_TUNNEL_ID.json
+   # Путь к файлу ключей (при работе от root он будет таким)
+   credentials-file: /root/.cloudflared/ID_ТУННЕЛЯ.json
 
    ingress:
      - hostname: ваш-домен.com
@@ -105,16 +124,16 @@ Telegram-бот для мониторинга входящих транзакц�
      - service: http_status:404
    ```
 
-   **Шаг 4. Установка как сервис**:
+   **Шаг 6. Запуск туннеля как системного сервиса**:
    ```bash
    cloudflared service install
    systemctl enable --now cloudflared
    ```
 
 ## Структура данных
-Бот использует **SQLite** (`data.db`). Файл `notified_txs.json` больше не используется. Все состояния уведомлений и настройки пользователей хранятся в БД.
+Бот использует **SQLite** (`data.db`). Все состояния транзакций и настройки пользователей хранятся в БД. Бот автоматически мигрирует данные при первом запуске.
 
 ## Использование
 - Введите `/start` в боте.
-- Используйте Mini App для управления адресами.
-- Если бот был заблокирован (`Forbidden`), просто напишите ему любое сообщение или нажмите `/start`, чтобы возобновить уведомления (флаг `bot_blocked` сбросится автоматически).
+- Используйте кнопку "Открыть Mini App" для управления.
+- Если бот был заблокирован пользователем (`Forbidden`), флаг `bot_blocked` сбросится автоматически, как только пользователь напишет боту.
