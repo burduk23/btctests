@@ -12,3 +12,8 @@ state.json
 /tests
 state.json
 state.json.bak
+/core/__pycache__
+/core/__pycache__
+/core/__pycache__
+data.db
+data.db

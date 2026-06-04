@@ -1,7 +1,8 @@
 import logging
 from typing import List, Optional, Dict, Any
 from sqlalchemy import select, delete
-from sqlalchemy.orm import selectinload, flag_modified
+from sqlalchemy.orm import selectinload
+from sqlalchemy.orm.attributes import flag_modified
 from .database import async_session
 from .models import User, Admin, AddressGroup, Address, Transaction
 from .config import config
