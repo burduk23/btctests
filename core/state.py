@@ -1,7 +1,7 @@
 import logging
 from typing import List, Optional, Dict, Any
 from sqlalchemy import select, delete
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import selectinload, flag_modified
 from .database import async_session
 from .models import User, Admin, AddressGroup, Address, Transaction
 from .config import config
@@ -123,12 +123,11 @@ async def update_notified_confs(txid: str, uid: str, milestone: str):
             tx = Transaction(txid=txid, notified_confs={uid: [milestone]})
             session.add(tx)
         else:
-            confs = dict(tx.notified_confs)
-            if uid not in confs:
-                confs[uid] = []
-            if milestone not in confs[uid]:
-                confs[uid].append(milestone)
-            tx.notified_confs = confs
+            if uid not in tx.notified_confs:
+                tx.notified_confs[uid] = []
+            if milestone not in tx.notified_confs[uid]:
+                tx.notified_confs[uid].append(milestone)
+                flag_modified(tx, "notified_confs")
             
         await session.commit()
 

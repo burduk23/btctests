@@ -62,7 +62,10 @@ async def initialize_address(addr, uid):
                     
                     notified = await get_notified_confs(txid)
                     key = f"{uid_str}:{addr}"
-                    if key not in notified or "target" not in notified[key]:
+                    # Check both specific key and legacy uid key
+                    if key not in notified and uid_str not in notified:
+                        await update_notified_confs(txid, key, "target")
+                    elif key in notified and "target" not in notified[key]:
                         await update_notified_confs(txid, key, "target")
                 return True
     except Exception as e:
@@ -101,6 +104,10 @@ async def process_tx(app, tx, addr, subs, btc_price, tip_height):
         key = f"{uid}:{addr}"
         user_milestones = tx_notified.get(key, [])
         
+        # Fallback for migrated data (which only used uid)
+        if not user_milestones and uid in tx_notified:
+            user_milestones = tx_notified[uid]
+            
         # Determine highest reached milestone
         reached_milestone = None
         if confs >= target:
