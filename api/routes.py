@@ -143,7 +143,7 @@ async def web_api_action(request):
                 session.add(new_addr)
                 await session.commit()
                 
-                await initialize_address(addr, uid)
+                await initialize_address(addr, uid, target=confirmations, group_name=name, app=request.app['bot_app'])
                 return web.json_response({"success": True})
                 
             elif action == "delete_group":
@@ -189,7 +189,7 @@ async def web_api_action(request):
                 session.add(new_addr)
                 await session.commit()
                 
-                await initialize_address(addr, target_uid)
+                await initialize_address(addr, target_uid, target=confirmations, group_name=name, app=request.app['bot_app'])
                 return web.json_response({"success": True})
                 
             elif action == "admin_broadcast" and is_admin:

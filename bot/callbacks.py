@@ -167,7 +167,7 @@ async def callback_router(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
                 session.add(new_addr)
                 await session.commit()
                 
-                await initialize_address(addr, target_uid)
+                await initialize_address(addr, target_uid, target=confirmations, group_name=name, app=ctx.application)
                 ctx.chat_data.pop("flow", None) # type: ignore
                 await remove_prompt(ctx, chat_id)
                 await ctx.bot.send_message(chat_id=chat_id, text=f"✅ Адрес добавлен пользователю {target_uid} в «{name}» ({confirmations} подтв.).")
@@ -187,7 +187,7 @@ async def callback_router(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
                     session.add(new_addr)
                     await session.commit()
                     
-                    await initialize_address(addr, chat_id)
+                    await initialize_address(addr, chat_id, target=confirmations, group_name=group.name, app=ctx.application)
                     ctx.chat_data.pop("flow", None) # type: ignore
                     await remove_prompt(ctx, chat_id)
                     await ctx.bot.send_message(chat_id=chat_id, text=f"✅ Адрес добавлен в «{group.name}» ({confirmations} подтв.).")
@@ -212,7 +212,7 @@ async def callback_router(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
                 session.add(new_addr)
                 await session.commit()
                 
-                await initialize_address(addr, chat_id)
+                await initialize_address(addr, chat_id, target=confirmations, group_name=name, app=ctx.application)
                 ctx.chat_data.pop("flow", None) # type: ignore
                 await remove_prompt(ctx, chat_id)
                 await ctx.bot.send_message(chat_id=chat_id, text=f"✅ Адрес добавлен в «{name}» ({confirmations} подтв.).")

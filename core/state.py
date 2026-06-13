@@ -114,6 +114,15 @@ async def get_notified_confs(txid: str) -> Dict[str, List[str]]:
             return tx.notified_confs
         return {}
 
+async def get_notified_confs_batch(txids: List[str]) -> Dict[str, Dict[str, List[str]]]:
+    if not txids:
+        return {}
+    async with async_session() as session:
+        stmt = select(Transaction).where(Transaction.txid.in_(txids))
+        result = await session.execute(stmt)
+        txs = result.scalars().all()
+        return {tx.txid: tx.notified_confs for tx in txs}
+
 async def update_notified_confs(txid: str, uid: str, milestone: str):
     async with async_session() as session:
         stmt = select(Transaction).where(Transaction.txid == txid)
@@ -130,6 +139,39 @@ async def update_notified_confs(txid: str, uid: str, milestone: str):
                 tx.notified_confs[uid].append(milestone)
                 flag_modified(tx, "notified_confs")
             
+        await session.commit()
+
+async def update_notified_confs_batch(updates: List[Dict[str, Any]]):
+    """
+    updates: List of {"txid": str, "uid": str, "milestone": str}
+    """
+    if not updates:
+        return
+        
+    async with async_session() as session:
+        # Get all relevant transactions first to minimize queries
+        txids = list(set(u["txid"] for u in updates))
+        stmt = select(Transaction).where(Transaction.txid.in_(txids))
+        result = await session.execute(stmt)
+        existing_txs = {tx.txid: tx for tx in result.scalars().all()}
+        
+        for update in updates:
+            txid = update["txid"]
+            uid = update["uid"]
+            milestone = update["milestone"]
+            
+            if txid in existing_txs:
+                tx = existing_txs[txid]
+                if uid not in tx.notified_confs:
+                    tx.notified_confs[uid] = []
+                if milestone not in tx.notified_confs[uid]:
+                    tx.notified_confs[uid].append(milestone)
+                    flag_modified(tx, "notified_confs")
+            else:
+                tx = Transaction(txid=txid, notified_confs={uid: [milestone]})
+                session.add(tx)
+                existing_txs[txid] = tx # Add to local cache for subsequent updates in same batch
+                
         await session.commit()
 
 async def add_address_group(telegram_id: int, name: str) -> AddressGroup:
